@@ -1,7 +1,7 @@
 use tetromino::Color::*;
 use tetromino::Rotation::*;
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub enum Color { Cyan, Blue, Orange, Yellow, Lime, Purple, Red }
 
 impl Color {
@@ -63,7 +63,7 @@ pub static SHAPES: [Tetromino; 7] = [
     }
 ];
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub enum Rotation { R0, R1, R2, R3 }
 impl Rotation {
     pub fn increase(&self) -> Rotation {

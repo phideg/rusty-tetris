@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::default::Default;
-use graphics::{ Context, RelativeTransform, Image, default_draw_state };
+use graphics::{ Context, Image, Transformed, default_draw_state };
 use opengl_graphics::{ GlGraphics, Texture };
 use piston::event::UpdateArgs;
 use piston::input::keyboard::Key;
@@ -13,7 +13,7 @@ pub const BOARD_WIDTH: usize = 10;
 pub const BOARD_HEIGHT: usize = 20;
 static TILE_SIZE: f64 = 40.0;
 
-#[derive(PartialEq, Copy)]
+#[derive(PartialEq, Copy, Clone)]
 enum State {
     Playing,
     Dropping,
@@ -92,13 +92,13 @@ impl Tetris {
         for y in 0usize..BOARD_HEIGHT {
             for x in 0usize..BOARD_WIDTH {
                 self.board[y][x].as_ref()
-                    .map(|e| Image::colored(e.as_rgba())
+                    .map(|e| Image::new_colored(e.as_rgba())
                                   .draw(self.block.as_ref().unwrap(), default_draw_state(),
                                         c.trans(pos(x), pos(y)).transform, gl));
             }
         }
         for &(x,y) in self.active_tetromino.as_points().iter() {
-            Image::colored(self.active_tetromino.get_color().as_rgba())
+            Image::new_colored(self.active_tetromino.get_color().as_rgba())
                  .draw(self.block.as_ref().unwrap(), default_draw_state(), c.trans(pos(x), pos(y)).transform, gl);
         }
     }
