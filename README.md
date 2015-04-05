@@ -1,4 +1,4 @@
-# Rusty Tetris [![Build Status](https://travis-ci.org/phideg/rusty-tetris.svg?branch=master)](https://travis-ci.org/phideg/rusty-tetris)
+# Rusty Tetris [![Build Status](https://travis-ci.org/PistonDevelopers/rusty-tetris.svg?branch=master)](https://travis-ci.org/PistonDevelopers/rusty-tetris)
 
 
 A Tetris clone written in Rust.
