@@ -50,5 +50,9 @@ fn main() {
         if let Some(Button::Keyboard(key)) = e.press_args() {
             game.key_press(&key);
         }
+
+        if let Some(Button::Keyboard(key)) = e.release_args() {
+            game.key_release(&key);
+        }
     }
 }

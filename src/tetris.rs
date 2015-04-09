@@ -132,4 +132,12 @@ impl Tetris {
             _ => {}
         }
     }
+
+    pub fn key_release(&mut self, key: &Key) {
+        match (self.state, key) {
+            (Dropping,  &Key::Down)  | (Dropping, &Key::S) if !self.paused
+                => self.state = Playing,
+            _ => {}
+        }
+    }
 }
