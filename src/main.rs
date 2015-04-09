@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use sdl2_window::Sdl2Window;
 use piston::window::{ WindowSettings, Size };
+use piston::event::*;
 
 mod tetromino;
 mod active;
@@ -32,8 +33,7 @@ fn main() {
     let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 });
     let ref mut gl = GlGraphics::new(opengl);
     let window = Rc::new(RefCell::new(window));
-    for e in piston::events(window) {
-        use piston::event::{ PressEvent, RenderEvent, UpdateEvent };
+    for e in window.events() {
         use piston::input::Button;
 
         if let Some(args) = e.render_args() {
