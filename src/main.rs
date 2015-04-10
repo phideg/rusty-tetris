@@ -43,10 +43,6 @@ fn main() {
             });
         }
 
-        if let Some(uargs) = e.update_args() {
-            game.update(&uargs);
-        }
-
         if let Some(Button::Keyboard(key)) = e.press_args() {
             game.key_press(&key);
         }
@@ -54,5 +50,10 @@ fn main() {
         if let Some(Button::Keyboard(key)) = e.release_args() {
             game.key_release(&key);
         }
+
+        if let Some(uargs) = e.update_args() {
+            game.update(&uargs);
+        }
+
     }
 }

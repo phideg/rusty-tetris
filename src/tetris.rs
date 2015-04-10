@@ -13,11 +13,83 @@ pub const BOARD_WIDTH: usize = 10;
 pub const BOARD_HEIGHT: usize = 20;
 static TILE_SIZE: f64 = 40.0;
 
+pub const UPDATE_TIME: f64 = 0.15;
+
+
 #[derive(PartialEq, Copy, Clone)]
 enum State {
     Playing,
     Dropping,
     Defeated
+}
+
+#[derive(Debug, Copy, Clone)]
+enum KeyStateType {
+    Released,
+    Pressed,
+    PressedLongTime
+}
+
+#[derive(Debug)]
+struct KeyState {
+    state_type : KeyStateType,
+    press_count : i32
+}
+
+impl KeyState {
+    fn new() -> KeyState {
+        KeyState {
+            state_type: KeyStateType::Released,
+            press_count: 0
+        }
+    }
+
+    fn update_on_press(&mut self) {
+        if let KeyStateType::Released = self.state_type {
+            self.state_type = KeyStateType::Pressed;
+            self.press_count += 1;
+        }
+    }
+
+    fn update_on_release(&mut self) {
+        match self.state_type {
+            KeyStateType::Pressed => {
+                self.state_type = KeyStateType::Released;
+            },
+            KeyStateType::PressedLongTime => {
+                self.reset();
+            },
+            _ => {}
+        }
+    }
+
+    fn update_by_time(&mut self) {
+        match (self.state_type, self.press_count) {
+            (KeyStateType::Pressed, 1) => {
+                self.state_type = KeyStateType::PressedLongTime;
+            },
+            (KeyStateType::PressedLongTime, _) => {},
+            _ => {
+                self.reset();
+            }
+        }
+    }
+
+    fn is_active(&self) -> bool {
+        self.press_count > 0
+    }
+
+    fn reset(&mut self) {
+        self.state_type = KeyStateType::Released;
+        self.press_count = 0;
+    }
+}
+
+pub struct ControlState {
+    rotate_right : KeyState,
+    rotate_left : KeyState,
+    move_left : KeyState,
+    move_right : KeyState
 }
 
 pub struct Tetris {
@@ -27,6 +99,8 @@ pub struct Tetris {
     active_tetromino: ActiveTetromino,
     board: [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT],
     state: State,
+    control_state : ControlState,
+    time: f64,
     block: Option<Texture>,
     paused: bool,
     scale: f64,
@@ -41,6 +115,13 @@ impl Tetris {
             active_tetromino: ActiveTetromino::new(),
             board: [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT],
             state: Playing,
+            control_state: ControlState {
+                rotate_right: KeyState::new(),
+                rotate_left: KeyState::new(),
+                move_left: KeyState::new(),
+                move_right: KeyState::new()
+            },
+            time: UPDATE_TIME,
             block: Some(Texture::from_path(&(Path::new("./bin/assets/block.png"))).unwrap()),
             paused: false,
             scale: scale,
@@ -106,6 +187,41 @@ impl Tetris {
     pub fn update(&mut self, args: &UpdateArgs) {
         if self.paused { return }
 
+        self.time += args.dt;
+
+        if self.time > UPDATE_TIME {
+            if self.control_state.rotate_right.is_active() {
+                for _ in 0..self.control_state.rotate_right.press_count {
+                    self.active_tetromino.try_rotate_right(&self.board);
+                }
+
+                self.control_state.rotate_right.update_by_time();
+            }
+
+            if self.control_state.rotate_left.is_active() {
+                for _ in 0..self.control_state.rotate_left.press_count {
+                    self.active_tetromino.try_rotate_left(&self.board);
+                }
+                self.control_state.rotate_left.update_by_time();
+            }
+
+            if self.control_state.move_left.is_active() {
+                for _ in 0..self.control_state.move_left.press_count {
+                    self.active_tetromino.try_move_left(&self.board);
+                }
+                self.control_state.move_left.update_by_time();
+            }
+
+            if self.control_state.move_right.is_active() {
+                for _ in 0..self.control_state.move_right.press_count {
+                    self.active_tetromino.try_move_right(&self.board);
+                }
+                self.control_state.move_right.update_by_time();
+            }
+
+            self.time -= UPDATE_TIME;
+        }
+
         match self.state {
             Playing     => self.gravity(args.dt),
             Dropping    => self.gravity(0.12 + args.dt),
@@ -117,18 +233,20 @@ impl Tetris {
         match (self.state, key) {
             (Defeated, &Key::F1)
                 => self.play_again(),
-            (Playing,  &Key::E) if !self.paused
-                => self.active_tetromino.try_rotate_right(&self.board),
-            (Playing,  &Key::Up)    | (Playing, &Key::Q) if !self.paused
-                => self.active_tetromino.try_rotate_left(&self.board),
-            (Playing,  &Key::Left)  | (Playing, &Key::A) if !self.paused
-                => self.active_tetromino.try_move_left(&self.board),
-            (Playing,  &Key::Right) | (Playing, &Key::D) if !self.paused
-                => self.active_tetromino.try_move_right(&self.board),
-            (Playing,  &Key::Down)  | (Playing, &Key::S) if !self.paused
-                => self.state = Dropping,
+            (Defeated, _) 
+                => {},
             (Playing,  &Key::P)
                 => self.paused = !self.paused,
+            (_,  &Key::E) if !self.paused
+                => self.control_state.rotate_right.update_on_press(),
+            (_,  &Key::Up)    | (_, &Key::Q) if !self.paused
+                => self.control_state.rotate_left.update_on_press(),
+            (_,  &Key::Left)  | (_, &Key::A) if !self.paused
+                => self.control_state.move_left.update_on_press(),
+            (_,  &Key::Right) | (_, &Key::D) if !self.paused
+                => self.control_state.move_right.update_on_press(),
+            (_,  &Key::Down)  | (_, &Key::S) if !self.paused
+                => self.state = Dropping,
             _ => {}
         }
     }
@@ -137,6 +255,14 @@ impl Tetris {
         match (self.state, key) {
             (Dropping,  &Key::Down)  | (Dropping, &Key::S) if !self.paused
                 => self.state = Playing,
+            (_,  &Key::E) if !self.paused
+                => self.control_state.rotate_right.update_on_release(),
+            (_,  &Key::Up)    | (_, &Key::Q) if !self.paused
+                => self.control_state.rotate_left.update_on_release(),
+            (_,  &Key::Left)  | (_, &Key::A) if !self.paused
+                => self.control_state.move_left.update_on_release(),
+            (_,  &Key::Right) | (_, &Key::D) if !self.paused
+                => self.control_state.move_right.update_on_release(),
             _ => {}
         }
     }
