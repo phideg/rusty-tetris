@@ -1,4 +1,3 @@
-#![feature(negate_unsigned)]
 extern crate rand;
 extern crate piston;
 extern crate graphics;

@@ -1,10 +1,11 @@
 use rand::{thread_rng, Rng};
 use tetromino::{Tetromino,SHAPES,Color,Rotation};
 use tetromino::Rotation::*;
+use std::usize;
 
 pub const BOARD_WIDTH: usize = 10;
 pub const BOARD_HEIGHT: usize = 20;
-static HIDDEN_ROWS: [usize; 3] = [-3, -2, -1];
+static HIDDEN_ROWS: [usize; 3] = [usize::MAX-2, usize::MAX-1, usize::MAX];
 
 pub struct ActiveTetromino {
     x: usize,
