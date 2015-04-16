@@ -8,7 +8,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use sdl2_window::Sdl2Window;
-use piston::window::{ WindowSettings, Size };
+use piston::window::WindowSettings;
 use piston::event::*;
 
 mod tetromino;
@@ -22,11 +22,9 @@ fn main() {
     let opengl = OpenGL::_3_2;
     let window = Sdl2Window::new(
         opengl,
-        WindowSettings::new(
-            "Rusty Tetris".to_string(),
-            Size { width: width, height: height })
-            .exit_on_esc(true)
-            .fullscreen(false)
+        WindowSettings::new("Rusty Tetris", (width, height))
+        .exit_on_esc(true)
+        .fullscreen(false)
     );
 
     let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 });
