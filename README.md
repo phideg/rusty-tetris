@@ -17,7 +17,9 @@ The fall speed increases every 10 tetrominoes.
 
 ## How to build & run
 
-You need the latest Rust and Cargo installed (see [here](http://www.rust-lang.org/install.html)).
+prerequisites:
+- Rust 1.0 and Cargo (see [here](http://www.rust-lang.org/install.html))
+- freetype (see [here](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started#installing-dependencies))
 
 1. `git clone ...` the repository
 2. cd into the `rusty-tetris` directory
@@ -26,4 +28,5 @@ You need the latest Rust and Cargo installed (see [here](http://www.rust-lang.or
 
 ## Dependencies:
 
-The project uses the [piston game engine](https://github.com/PistonDevelopers/piston)
+The project uses the [piston game engine](https://github.com/PistonDevelopers/piston) with the glutin backend.
+

@@ -1,13 +1,13 @@
 extern crate rand;
 extern crate piston;
 extern crate graphics;
-extern crate sdl2_window;
+extern crate glutin_window;
 extern crate opengl_graphics;
 
 use std::rc::Rc;
 use std::cell::RefCell;
 use opengl_graphics::{ GlGraphics, OpenGL };
-use sdl2_window::Sdl2Window;
+use glutin_window::GlutinWindow as Window;
 use piston::window::WindowSettings;
 use piston::event::*;
 
@@ -15,14 +15,13 @@ mod tetromino;
 mod active;
 mod tetris;
 
-fn main() {
+fn main() { 
     let mini = false;
     let (width, height) = (400, 800);
     let (width, height) = if mini { (width / 2, height / 2) } else { (width, height) };
     let opengl = OpenGL::_3_2;
-    let window = Sdl2Window::new(
-        opengl,
-        WindowSettings::new("Rusty Tetris", (width, height))
+    let window = Window::new(
+        WindowSettings::new("Rusty Tetris", [width, height])
         .exit_on_esc(true)
         .fullscreen(false)
     );
