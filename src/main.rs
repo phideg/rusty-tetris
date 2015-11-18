@@ -9,7 +9,8 @@ use std::cell::RefCell;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use glutin_window::GlutinWindow as Window;
 use piston::window::WindowSettings;
-use piston::event::*;
+use piston::input::*;
+use piston::event_loop::Events;
 
 mod tetromino;
 mod active;
@@ -19,12 +20,13 @@ fn main() {
     let mini = false;
     let (width, height) = (400, 800);
     let (width, height) = if mini { (width / 2, height / 2) } else { (width, height) };
-    let opengl = OpenGL::_3_2;
+    let opengl = OpenGL::V3_2;
     let window = Window::new(
         WindowSettings::new("Rusty Tetris", [width, height])
         .exit_on_esc(true)
         .fullscreen(false)
-    );
+        .opengl(opengl)
+    ).expect("Window::new()");
 
     let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 });
     let ref mut gl = GlGraphics::new(opengl);
