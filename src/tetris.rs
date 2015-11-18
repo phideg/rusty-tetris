@@ -2,7 +2,7 @@ use std::path::Path;
 use std::default::Default;
 use graphics::{ Context, Image, Transformed, default_draw_state };
 use opengl_graphics::{ GlGraphics, Texture };
-use piston::event::UpdateArgs;
+use piston::input::UpdateArgs;
 use piston::input::keyboard::Key;
 
 use active::ActiveTetromino;
@@ -173,13 +173,13 @@ impl Tetris {
         for y in 0usize..BOARD_HEIGHT {
             for x in 0usize..BOARD_WIDTH {
                 self.board[y][x].as_ref()
-                    .map(|e| Image::new_colored(e.as_rgba())
+                    .map(|e| Image::new_color(e.as_rgba())
                                   .draw(self.block.as_ref().unwrap(), default_draw_state(),
                                         c.trans(pos(x), pos(y)).transform, gl));
             }
         }
         for &(x,y) in self.active_tetromino.as_points().iter() {
-            Image::new_colored(self.active_tetromino.get_color().as_rgba())
+            Image::new_color(self.active_tetromino.get_color().as_rgba())
                  .draw(self.block.as_ref().unwrap(), default_draw_state(), c.trans(pos(x), pos(y)).transform, gl);
         }
     }
