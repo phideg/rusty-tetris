@@ -13,8 +13,6 @@ path = "src/main.rs"
 
 
 [dependencies]
-piston = "0.15.1"
-pistoncore-glutin_window = "0.17.1"
-piston2d-opengl_graphics = "0.19.0"
-piston2d-graphics = "0.11.0"
-rand = "0.3.12"
+gfx_device_gl = "0.7.0"
+piston_window = "0.33.0"
+rand = "0.3.13"

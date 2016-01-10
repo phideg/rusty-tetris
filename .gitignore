@@ -11,6 +11,7 @@
 *.dummy
 *.exe
 *-test
+*.geany
 /bin/main
 /bin/test-internal
 /bin/test-external
@@ -21,3 +22,4 @@
 rusti.sh
 Cargo.lock
 .project
+.cargo

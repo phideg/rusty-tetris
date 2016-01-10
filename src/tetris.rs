@@ -1,9 +1,6 @@
-use std::path::Path;
 use std::default::Default;
-use graphics::{ Context, Image, Transformed, default_draw_state };
-use opengl_graphics::{ GlGraphics, Texture };
-use piston::input::UpdateArgs;
-use piston::input::keyboard::Key;
+use gfx_device_gl::Resources;
+use piston_window::*;
 
 use active::ActiveTetromino;
 use tetromino::Color;
@@ -92,7 +89,7 @@ pub struct ControlState {
     move_right : KeyState
 }
 
-pub struct Tetris {
+pub struct Tetris<'a> {
     gravity_accumulator: f64,
     gravity_factor: f64,
     tetromino_count: usize,
@@ -101,13 +98,13 @@ pub struct Tetris {
     state: State,
     control_state : ControlState,
     time: f64,
-    block: Option<Texture>,
+    block: &'a Texture<Resources>,
     paused: bool,
     scale: f64,
 }
 
-impl Tetris {
-    pub fn new(scale: f64) -> Tetris {
+impl<'a> Tetris<'a> {
+    pub fn new(scale: f64, texture: &'a Texture<Resources>) -> Tetris {
         Tetris {
             gravity_accumulator: 0.0,
             gravity_factor: 0.5,
@@ -122,7 +119,7 @@ impl Tetris {
                 move_right: KeyState::new()
             },
             time: UPDATE_TIME,
-            block: Some(Texture::from_path(&(Path::new("./bin/assets/block.png"))).unwrap()),
+            block: texture,
             paused: false,
             scale: scale,
         }
@@ -167,20 +164,20 @@ impl Tetris {
         self.active_tetromino = ActiveTetromino::new();
     }
 
-    pub fn render(&mut self, c: &Context, gl: &mut GlGraphics) {
+    pub fn render(&mut self, c: &Context, g: &mut G2d) {
         let c = c.zoom(self.scale);
         fn pos(n: usize) -> f64 { n as f64 * TILE_SIZE }
         for y in 0usize..BOARD_HEIGHT {
             for x in 0usize..BOARD_WIDTH {
                 self.board[y][x].as_ref()
                     .map(|e| Image::new_color(e.as_rgba())
-                                  .draw(self.block.as_ref().unwrap(), default_draw_state(),
-                                        c.trans(pos(x), pos(y)).transform, gl));
+                                  .draw(self.block, default_draw_state(),
+                                        c.trans(pos(x), pos(y)).transform, g));
             }
         }
         for &(x,y) in self.active_tetromino.as_points().iter() {
             Image::new_color(self.active_tetromino.get_color().as_rgba())
-                 .draw(self.block.as_ref().unwrap(), default_draw_state(), c.trans(pos(x), pos(y)).transform, gl);
+                 .draw(self.block, default_draw_state(), c.trans(pos(x), pos(y)).transform, g);
         }
     }
 
