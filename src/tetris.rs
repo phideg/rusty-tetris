@@ -1,5 +1,6 @@
 use std::default::Default;
 use gfx_device_gl::Resources;
+//use gfx_core::Resources;
 use piston_window::*;
 
 use active::ActiveTetromino;
@@ -171,13 +172,13 @@ impl<'a> Tetris<'a> {
             for x in 0usize..BOARD_WIDTH {
                 self.board[y][x].as_ref()
                     .map(|e| Image::new_color(e.as_rgba())
-                                  .draw(self.block, default_draw_state(),
+                                  .draw(self.block, &Default::default(),
                                         c.trans(pos(x), pos(y)).transform, g));
             }
         }
         for &(x,y) in self.active_tetromino.as_points().iter() {
             Image::new_color(self.active_tetromino.get_color().as_rgba())
-                 .draw(self.block, default_draw_state(), c.trans(pos(x), pos(y)).transform, g);
+                 .draw(self.block, &Default::default(), c.trans(pos(x), pos(y)).transform, g);
         }
     }
 
