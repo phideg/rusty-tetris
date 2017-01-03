@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 
 [dependencies]
-piston_window = "0.51.*"
-gfx_device_gl = "0.11.*"
+piston_window = "0.60.*"
+gfx_device_gl = "0.12.*"
 find_folder = "0.3.*"
 rand = "0.3.*"
