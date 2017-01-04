@@ -20,14 +20,14 @@ The fall speed increases every 10 tetrominoes.
 
 ## How to build & run
 
-prerequisites:
+Prerequisites:
 - Rust 1.0 and Cargo (see [here](http://www.rust-lang.org/install.html))
 - install [External Dependencies](#external_dependencies)
 
+Build & run:
 1. `git clone ...` the repository
 2. cd into the `rusty-tetris` directory
-3. Type `cargo build`
-4. Type `cargo run`
+3. `cargo run --release`
 
 ## Dependencies
 
@@ -43,3 +43,5 @@ The piston game engine currently depends on a few external non-Rust libraries
 The background music
 - gravitationalWaves by airtone (c) copyright 2016 Licensed under a Creative Commons Attribution Noncommercial  (3.0) license. http://dig.ccmixter.org/files/airtone/55021 
 
+## Remark
+The initial [Rusty Tetris](https://github.com/bachm/rusty-tetris) version was implemented by [bachm](https://github.com/bachm).
