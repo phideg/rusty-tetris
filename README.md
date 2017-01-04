@@ -14,6 +14,8 @@ The fall speed increases every 10 tetrominoes.
 - S or Down => drop
 - F1 => restart after losing
 
+## Command line options:
+By default the game starts with a resolution of 600x800. With the `-m` option a minified version gets rendered which should also work on smaller screens. 
 
 ## How to build & run
 

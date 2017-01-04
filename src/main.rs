@@ -1,16 +1,28 @@
+#[macro_use]
 extern crate piston_window;
 extern crate gfx_device_gl;
 extern crate find_folder;
 extern crate rand;
+extern crate clap;
 
 use piston_window::*;
+use clap::{App, Arg};
 
 mod tetromino;
 mod active;
 mod tetris;
 
 fn main() {
-    let mini = true;
+    let matches = App::new("rusty-tetris")
+        .about("Simple Tetris clone written in Rust")
+        .version("0.0.3")
+        .arg(Arg::with_name("mini")
+            .short("m")
+            .help("Use this option for screen resolutions < 600x800")
+            .multiple(false))
+        .get_matches();
+
+    let mini = matches.is_present("mini");
     let (width, height) = (tetris::WINDOW_WIDTH, tetris::WINDOW_HEIGHT);
     let (width, height) = if mini {
         (width / 2, height / 2)
