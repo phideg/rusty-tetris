@@ -12,11 +12,12 @@ The fall speed increases every 10 tetrominoes.
 - E / Q or Up => rotate
 - A / D or Left / Right => move
 - S or Down => drop
-- F1 => restart after losing
+- F1 => restart the game at any time
 
 ## Command line options
 - `-m` By default the game starts with a resolution of 600x800. With the `-m` option a minified version gets rendered which should also work on smaller screens. 
 - `-o` Switches off the background music
+- `-i` specifies the number of initial lines whose cells should be randomly filled
 
 ## How to build & run
 

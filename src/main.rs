@@ -24,18 +24,28 @@ fn main() {
     let matches = App::new("rusty-tetris")
         .about("Simple Tetris clone written in Rust")
         .version("0.0.4")
-        .arg(Arg::with_name("mini")
-            .short("m")
-            .long("mini")
-            .help("Use this option for screen resolutions < 600x800")
-            .multiple(false))
+        .arg(Arg::with_name("initial_stack_size")
+            .short("i")
+            .long("initial_stack_size")
+            .help("Deteremines the number of lines to be filled randomly")
+            .multiple(false)
+            .takes_value(true))
         .arg(Arg::with_name("music_off")
             .short("o")
             .long("music_off")
-            .help("Use this option to turn off the music")
+            .help("Turns off the music")
+            .multiple(false))
+        .arg(Arg::with_name("mini")
+            .short("m")
+            .long("mini")
+            .help("Minified rendering for screens < 600x800")
             .multiple(false))
         .get_matches();
-
+    let mut initial_stack_size: usize = 0;
+    if let Some(ref stack_size_str) = matches.value_of("initial_stack_size") {
+        initial_stack_size = stack_size_str.parse::<usize>().unwrap();
+    }
+    let music_off = matches.is_present("music_off");
     let mini = matches.is_present("mini");
     let (width, height) = (tetris::WINDOW_WIDTH, tetris::WINDOW_HEIGHT);
     let (width, height) = if mini {
@@ -57,9 +67,10 @@ fn main() {
                                          Flip::None,
                                          &TextureSettings::new())
         .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
-    let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 }, &basic_block);
+    let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 },
+                                       &basic_block,
+                                       initial_stack_size);
 
-    let music_off = matches.is_present("music_off");
     music::start::<Music, _>(|| {
         music::bind_file(Music::Waves,
                          &(assets.join("airtone_-_gravitationalWaves.mp3")));

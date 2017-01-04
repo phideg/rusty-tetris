@@ -1,4 +1,5 @@
 use std::default::Default;
+use rand::{thread_rng, Rng};
 use gfx_device_gl::Resources;
 // use gfx_core::Resources;
 use piston_window::*;
@@ -93,6 +94,7 @@ pub struct ControlState {
 }
 
 pub struct Tetris<'a> {
+    initial_stack_size: usize,
     gravity_accumulator: f64,
     gravity_factor: f64,
     tetromino_count: usize,
@@ -109,15 +111,21 @@ pub struct Tetris<'a> {
 }
 
 impl<'a> Tetris<'a> {
-    pub fn new(scale: f64, texture: &'a Texture<Resources>) -> Tetris {
+    pub fn new(scale: f64, texture: &'a Texture<Resources>, initial_stack_size: usize) -> Tetris {
+        let stack_size = if initial_stack_size < BOARD_HEIGHT {
+            initial_stack_size
+        } else {
+            BOARD_HEIGHT - 1
+        };
         Tetris {
+            initial_stack_size: stack_size,
             gravity_accumulator: 0.0,
             gravity_factor: 0.5,
             tetromino_count: 0,
             line_count: 0,
             active_tetromino: ActiveTetromino::new(Tetromino::get_random_shape()),
             next_shape: Tetromino::get_random_shape(),
-            board: [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT],
+            board: Tetris::create_board(stack_size),
             state: Playing,
             control_state: ControlState {
                 rotate_right: KeyState::new(),
@@ -132,117 +140,130 @@ impl<'a> Tetris<'a> {
         }
     }
 
+    pub fn create_board(initial_stack_size: usize) -> [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT] {
+        let mut board = [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT];
+        if initial_stack_size > 0 {
+            for y in 0usize..initial_stack_size {
+                // set random cells within a row
+                for x in (0usize..BOARD_WIDTH).filter(|_| thread_rng().gen()) {
+                    board[(BOARD_HEIGHT - 1) - y][x] = Some(Color::Grey);
+                }
+            }
+        }
+        board
+    }
+
     fn print_digit(&mut self, digit: usize, x_offset: usize) {
         match digit {
             0 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][0 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][0 + x_offset] = Some(Color::Black);
-                self.board[3][2 + x_offset] = Some(Color::Black);
-                self.board[4][0 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][0 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
-                self.board[5][2 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][0 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][0 + x_offset] = Some(Color::Grey);
+                self.board[3][2 + x_offset] = Some(Color::Grey);
+                self.board[4][0 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][0 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
+                self.board[5][2 + x_offset] = Some(Color::Grey);
 
             }
             1 => {
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][1 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][2 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][2 + x_offset] = Some(Color::Black);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][1 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][2 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][2 + x_offset] = Some(Color::Grey);
             }
             2 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[4][0 + x_offset] = Some(Color::Black);
-                self.board[5][0 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
-                self.board[5][2 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[4][0 + x_offset] = Some(Color::Grey);
+                self.board[5][0 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
+                self.board[5][2 + x_offset] = Some(Color::Grey);
             }
             3 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][2 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
-                self.board[5][0 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][2 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
+                self.board[5][0 + x_offset] = Some(Color::Grey);
             }
             4 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[2][0 + x_offset] = Some(Color::Black);
-                self.board[3][0 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[3][2 + x_offset] = Some(Color::Black);
-                self.board[4][1 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[2][0 + x_offset] = Some(Color::Grey);
+                self.board[3][0 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[3][2 + x_offset] = Some(Color::Grey);
+                self.board[4][1 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
             }
             5 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][0 + x_offset] = Some(Color::Black);
-                self.board[3][0 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[3][2 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
-                self.board[5][0 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][0 + x_offset] = Some(Color::Grey);
+                self.board[3][0 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[3][2 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
+                self.board[5][0 + x_offset] = Some(Color::Grey);
             }
             6 => {
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][0 + x_offset] = Some(Color::Black);
-                self.board[3][0 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[4][0 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][0 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
-                self.board[5][2 + x_offset] = Some(Color::Black);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][0 + x_offset] = Some(Color::Grey);
+                self.board[3][0 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[4][0 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][0 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
+                self.board[5][2 + x_offset] = Some(Color::Grey);
             }
             7 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[4][1 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[4][1 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
             }
             8 => {
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[2][0 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[4][0 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[2][0 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[4][0 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
             }
             9 => {
-                self.board[1][0 + x_offset] = Some(Color::Black);
-                self.board[1][1 + x_offset] = Some(Color::Black);
-                self.board[1][2 + x_offset] = Some(Color::Black);
-                self.board[2][0 + x_offset] = Some(Color::Black);
-                self.board[2][2 + x_offset] = Some(Color::Black);
-                self.board[3][0 + x_offset] = Some(Color::Black);
-                self.board[3][1 + x_offset] = Some(Color::Black);
-                self.board[3][2 + x_offset] = Some(Color::Black);
-                self.board[4][2 + x_offset] = Some(Color::Black);
-                self.board[5][0 + x_offset] = Some(Color::Black);
-                self.board[5][1 + x_offset] = Some(Color::Black);
-                self.board[5][2 + x_offset] = Some(Color::Black);
+                self.board[1][0 + x_offset] = Some(Color::Grey);
+                self.board[1][1 + x_offset] = Some(Color::Grey);
+                self.board[1][2 + x_offset] = Some(Color::Grey);
+                self.board[2][0 + x_offset] = Some(Color::Grey);
+                self.board[2][2 + x_offset] = Some(Color::Grey);
+                self.board[3][0 + x_offset] = Some(Color::Grey);
+                self.board[3][1 + x_offset] = Some(Color::Grey);
+                self.board[3][2 + x_offset] = Some(Color::Grey);
+                self.board[4][2 + x_offset] = Some(Color::Grey);
+                self.board[5][0 + x_offset] = Some(Color::Grey);
+                self.board[5][1 + x_offset] = Some(Color::Grey);
+                self.board[5][2 + x_offset] = Some(Color::Grey);
             }      
             _ => {}
         }
@@ -301,7 +322,7 @@ impl<'a> Tetris<'a> {
         self.tetromino_count = 0;
         self.line_count = 0;
         self.gravity_factor = 0.5;
-        self.board = [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT];
+        self.board = Tetris::create_board(self.initial_stack_size);
         self.active_tetromino = ActiveTetromino::new(Tetromino::get_random_shape());
         self.next_shape = Tetromino::get_random_shape();
     }
@@ -336,7 +357,7 @@ impl<'a> Tetris<'a> {
             }
         }
         // render the side bar
-        rectangle(Color::Black.as_rgba(),
+        rectangle(Color::Grey.as_rgba(),
                   [0.0, 0.0, WINDOW_WIDTH as f64 - pos(BOARD_WIDTH), WINDOW_HEIGHT as f64], // rectangle
                   c.trans(pos(BOARD_WIDTH), 0.0).transform,
                   g);
@@ -400,9 +421,13 @@ impl<'a> Tetris<'a> {
 
     pub fn key_press(&mut self, key: &Key) {
         match (self.state, key) {
-            (Defeated, &Key::F1) => self.play_again(),
-            (Defeated, _) => {}
+            (Defeated, _) => {
+                if key == &Key::F1 {
+                    self.play_again()
+                }
+            }
             (Playing, &Key::P) => self.paused = !self.paused,
+            (_, &Key::F1) => self.play_again(),
             (_, &Key::E) if !self.paused => self.control_state.rotate_right.update_on_press(),
             (_, &Key::Up) | (_, &Key::Q) if !self.paused => {
                 self.control_state.rotate_left.update_on_press()
