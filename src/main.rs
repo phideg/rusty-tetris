@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate piston_window;
+extern crate music;
 extern crate gfx_device_gl;
 extern crate find_folder;
 extern crate rand;
@@ -12,13 +13,27 @@ mod tetromino;
 mod active;
 mod tetris;
 
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
+enum Music {
+    // gravitationalWaves by airtone (c)
+    // copyright 2016 Licensed under a Creative Commons Attribution Noncommercial  (3.0) license.
+    // http://dig.ccmixter.org/files/airtone/55021
+    Waves,
+}
+
 fn main() {
     let matches = App::new("rusty-tetris")
         .about("Simple Tetris clone written in Rust")
-        .version("0.0.3")
+        .version("0.0.4")
         .arg(Arg::with_name("mini")
             .short("m")
+            .long("mini")
             .help("Use this option for screen resolutions < 600x800")
+            .multiple(false))
+        .arg(Arg::with_name("music_off")
+            .short("o")
+            .long("music_off")
+            .help("Use this option to turn off the music")
             .multiple(false))
         .get_matches();
 
@@ -45,22 +60,31 @@ fn main() {
         .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
     let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 }, &basic_block);
 
-    while let Some(e) = window.next() {
-        window.draw_2d(&e, |c, gl| {
-            clear([1.0; 4], gl);
-            game.render(&c, gl);
-        });
-
-        if let Some(uargs) = e.update_args() {
-            game.update(&uargs);
+    let music_off = matches.is_present("music_off");
+    music::start::<Music, _>(|| {
+        music::bind_file(Music::Waves,
+                         &(assets.join("airtone_-_gravitationalWaves.mp3")));
+        if !music_off {
+            music::set_volume(0.2);
+            music::play(&Music::Waves, music::Repeat::Forever);
         }
+        while let Some(e) = window.next() {
+            window.draw_2d(&e, |c, gl| {
+                clear([1.0; 4], gl);
+                game.render(&c, gl);
+            });
 
-        if let Some(Button::Keyboard(key)) = e.press_args() {
-            game.key_press(&key);
-        }
+            if let Some(uargs) = e.update_args() {
+                game.update(&uargs);
+            }
 
-        if let Some(Button::Keyboard(key)) = e.release_args() {
-            game.key_release(&key);
+            if let Some(Button::Keyboard(key)) = e.press_args() {
+                game.key_press(&key);
+            }
+
+            if let Some(Button::Keyboard(key)) = e.release_args() {
+                game.key_release(&key);
+            }
         }
-    }
+    })
 }
