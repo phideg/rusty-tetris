@@ -3,10 +3,12 @@ use gfx_device_gl::Resources;
 // use gfx_core::Resources;
 use piston_window::*;
 
+use tetromino::{Tetromino, Color, Rotation};
 use active::ActiveTetromino;
-use tetromino::Color;
 use tetris::State::*;
 
+pub const WINDOW_WIDTH: u32 = 600;
+pub const WINDOW_HEIGHT: u32 = 800;
 pub const BOARD_WIDTH: usize = 10;
 pub const BOARD_HEIGHT: usize = 20;
 static TILE_SIZE: f64 = 40.0;
@@ -96,6 +98,7 @@ pub struct Tetris<'a> {
     tetromino_count: usize,
     line_count: usize,
     active_tetromino: ActiveTetromino,
+    next_shape: &'static Tetromino,
     board: [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT],
     state: State,
     control_state: ControlState,
@@ -112,7 +115,8 @@ impl<'a> Tetris<'a> {
             gravity_factor: 0.5,
             tetromino_count: 0,
             line_count: 0,
-            active_tetromino: ActiveTetromino::new(),
+            active_tetromino: ActiveTetromino::new(Tetromino::get_random_shape()),
+            next_shape: Tetromino::get_random_shape(),
             board: [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT],
             state: Playing,
             control_state: ControlState {
@@ -279,7 +283,8 @@ impl<'a> Tetris<'a> {
                     }
                     self.board = board;
                     self.line_count += full_line_count;
-                    self.active_tetromino = ActiveTetromino::new();
+                    self.active_tetromino = ActiveTetromino::new(self.next_shape);
+                    self.next_shape = Tetromino::get_random_shape();
                     self.tetromino_count += 1;
                     if self.tetromino_count >= 10 {
                         self.tetromino_count = 0;
@@ -297,7 +302,8 @@ impl<'a> Tetris<'a> {
         self.line_count = 0;
         self.gravity_factor = 0.5;
         self.board = [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT];
-        self.active_tetromino = ActiveTetromino::new();
+        self.active_tetromino = ActiveTetromino::new(Tetromino::get_random_shape());
+        self.next_shape = Tetromino::get_random_shape();
     }
 
     pub fn render(&mut self, c: &Context, g: &mut G2d) {
@@ -305,6 +311,7 @@ impl<'a> Tetris<'a> {
         fn pos(n: usize) -> f64 {
             n as f64 * TILE_SIZE
         }
+        // render the board
         for y in 0usize..BOARD_HEIGHT {
             for x in 0usize..BOARD_WIDTH {
                 self.board[y][x]
@@ -327,6 +334,20 @@ impl<'a> Tetris<'a> {
                           c.trans(pos(x), pos(y)).transform,
                           g);
             }
+        }
+        // render the side bar
+        rectangle(Color::Black.as_rgba(),
+                  [0.0, 0.0, WINDOW_WIDTH as f64 - pos(BOARD_WIDTH), WINDOW_HEIGHT as f64], // rectangle
+                  c.trans(pos(BOARD_WIDTH), 0.0).transform,
+                  g);
+        for &(x, y) in self.next_shape.points(Rotation::R0).iter() {
+            Image::new_color(self.next_shape
+                    .get_color()
+                    .as_rgba())
+                .draw(self.block,
+                      &Default::default(),
+                      c.trans(pos(BOARD_WIDTH) + pos(x + 1), pos(y)).transform,
+                      g);
         }
     }
 

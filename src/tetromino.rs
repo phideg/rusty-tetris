@@ -1,3 +1,4 @@
+use rand::{thread_rng, Rng};
 use tetromino::Color::*;
 use tetromino::Rotation::*;
 
@@ -34,6 +35,9 @@ pub struct Tetromino {
 }
 
 impl Tetromino {
+    pub fn get_random_shape() -> &'static Tetromino {
+        thread_rng().choose(&SHAPES).unwrap()
+    }
     pub fn points(&self, rotation: Rotation) -> &[(usize, usize); 4] {
         &self.points[rotation as usize]
     }

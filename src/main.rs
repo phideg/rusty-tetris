@@ -9,27 +9,30 @@ mod tetromino;
 mod active;
 mod tetris;
 
-fn main() { 
-    let mini = false;
-    let (width, height) = (400, 800);
-    let (width, height) = if mini { (width / 2, height / 2) } else { (width, height) };
-    let mut window: PistonWindow = 
-        WindowSettings::new("Rusty Tetris", [width, height])
+fn main() {
+    let mini = true;
+    let (width, height) = (tetris::WINDOW_WIDTH, tetris::WINDOW_HEIGHT);
+    let (width, height) = if mini {
+        (width / 2, height / 2)
+    } else {
+        (width, height)
+    };
+    let mut window: PistonWindow = WindowSettings::new("Rusty Tetris", [width, height])
         .exit_on_esc(true)
         .opengl(OpenGL::V3_2)
         .build()
-        .unwrap_or_else(|e| { panic!("Failed to build PistonWindow: {}", e) });
-        
+        .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
+
     let assets = find_folder::Search::ParentsThenKids(3, 3)
-        .for_folder("assets").unwrap();
-    let basic_block = Texture::from_path(
-        &mut window.factory,
-        &(assets.join("block.png")),
-        Flip::None,
-        &TextureSettings::new()
-    ).unwrap_or_else(|e| { panic!("Failed to load assets: {}", e) });
+        .for_folder("assets")
+        .unwrap();
+    let basic_block = Texture::from_path(&mut window.factory,
+                                         &(assets.join("block.png")),
+                                         Flip::None,
+                                         &TextureSettings::new())
+        .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
     let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 }, &basic_block);
-    
+
     while let Some(e) = window.next() {
         window.draw_2d(&e, |c, gl| {
             clear([1.0; 4], gl);
