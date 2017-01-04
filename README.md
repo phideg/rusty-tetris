@@ -22,7 +22,7 @@ The fall speed increases every 10 tetrominoes.
 
 Prerequisites:
 - Rust 1.0 and Cargo (see [here](http://www.rust-lang.org/install.html))
-- install [External Dependencies](#external_dependencies)
+- install [External Dependencies](#external-dependencies)
 
 Build & run:
 1. `git clone ...` the repository
@@ -33,8 +33,7 @@ Build & run:
 
 The project uses the [piston game engine](https://github.com/PistonDevelopers/piston) with the glutin backend.
 
-## External Dependencies 
-[external-dependencies]: #external-dependencies
+## External Dependencies
 
 The piston game engine currently depends on a few external non-Rust libraries
 - SDL and SDL2_mixer (see [rust-sdl2 library README](https://github.com/AngryLawyer/rust-sdl2#requirements))
