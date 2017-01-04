@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate piston_window;
 extern crate music;
 extern crate gfx_device_gl;
