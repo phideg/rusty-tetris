@@ -33,7 +33,8 @@ Build & run:
 
 The project uses the [piston game engine](https://github.com/PistonDevelopers/piston) with the glutin backend.
 
-## External Dependencies (#external_dependencies)
+## External Dependencies 
+[external-dependencies]: #external-dependencies
 
 The piston game engine currently depends on a few external non-Rust libraries
 - SDL and SDL2_mixer (see [rust-sdl2 library README](https://github.com/AngryLawyer/rust-sdl2#requirements))
