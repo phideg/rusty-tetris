@@ -27,6 +27,7 @@ Prerequisites:
 - install [External Dependencies](#external-dependencies)
 
 Build & run:
+
 1. `git clone ...` the repository
 2. cd into the `rusty-tetris` directory
 3. `cargo run --release`
