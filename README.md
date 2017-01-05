@@ -11,7 +11,8 @@ The fall speed increases every 10 tetrominoes.
 ## Keys:
 - E / Q or Up => rotate
 - A / D or Left / Right => move
-- S or Down => drop
+- S or Down => fast move
+- space => drop immediately
 - F1 => restart the game at any time
 
 ## Command line options

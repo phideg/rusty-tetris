@@ -419,6 +419,11 @@ impl<'a> Tetris<'a> {
         }
     }
 
+    pub fn drop_fully(&mut self) {
+        while self.active_tetromino.try_move_down(&self.board) {}
+    }
+
+
     pub fn key_press(&mut self, key: &Key) {
         match (self.state, key) {
             (Defeated, _) => {
@@ -429,6 +434,10 @@ impl<'a> Tetris<'a> {
             (Playing, &Key::P) => self.paused = !self.paused,
             (_, &Key::F1) => self.play_again(),
             (_, &Key::E) if !self.paused => self.control_state.rotate_right.update_on_press(),
+            (_, &Key::Space) if !self.paused => {
+                self.state = Dropping;
+                self.drop_fully()
+            }
             (_, &Key::Up) | (_, &Key::Q) if !self.paused => {
                 self.control_state.rotate_left.update_on_press()
             }
