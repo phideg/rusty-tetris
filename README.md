@@ -35,6 +35,7 @@ Build & run:
 Windows:
 
 if you use the msvc based version of Rust you have to take care to install the msvc development libs of SDL2 and SDL_mixer.
+
 1. download [SDL2-devel-2.x.x-VC.zip](https://www.libsdl.org/download-2.0.php)
 2. download [SDL2_mixer-devel-2.x.x-VC.zip](https://www.libsdl.org/projects/SDL_mixer/)
 3. copy the *.lib files in your Rust lib directory typically `%HOMEPATH%\.multirust\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\x86_64-pc-windows-msvc\lib`
