@@ -8,11 +8,12 @@ use tetromino::{Tetromino, Color, Rotation};
 use active::ActiveTetromino;
 use tetris::State::*;
 
-pub const WINDOW_WIDTH: u32 = 600;
-pub const WINDOW_HEIGHT: u32 = 800;
+pub const TILE_SIZE: f64 = 40.0;
 pub const BOARD_WIDTH: usize = 10;
 pub const BOARD_HEIGHT: usize = 20;
-static TILE_SIZE: f64 = 40.0;
+pub const SIDEBAR_WIDTH: usize = 5;
+pub const WINDOW_WIDTH: u32 = (BOARD_WIDTH + SIDEBAR_WIDTH) as u32 * TILE_SIZE as u32;
+pub const WINDOW_HEIGHT: u32 = BOARD_HEIGHT as u32 * TILE_SIZE as u32;
 
 pub const UPDATE_TIME: f64 = 0.15;
 
@@ -93,64 +94,38 @@ pub struct ControlState {
     move_right: KeyState,
 }
 
-pub struct Tetris<'a> {
-    initial_stack_size: usize,
+pub struct Board {
+    board: [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT],
+    next_shape: &'static Tetromino,
+    active_tetromino: ActiveTetromino,
+    line_count: usize,
+    tetromino_count: usize,
+    control_state: ControlState,
     gravity_accumulator: f64,
     gravity_factor: f64,
-    tetromino_count: usize,
-    line_count: usize,
-    active_tetromino: ActiveTetromino,
-    next_shape: &'static Tetromino,
-    board: [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT],
+    offset: usize,
     state: State,
-    control_state: ControlState,
-    time: f64,
-    block: &'a Texture<Resources>,
-    paused: bool,
-    scale: f64,
 }
 
-impl<'a> Tetris<'a> {
-    pub fn new(scale: f64, texture: &'a Texture<Resources>, initial_stack_size: usize) -> Tetris {
-        let stack_size = if initial_stack_size < BOARD_HEIGHT {
-            initial_stack_size
-        } else {
-            BOARD_HEIGHT - 1
-        };
-        Tetris {
-            initial_stack_size: stack_size,
-            gravity_accumulator: 0.0,
-            gravity_factor: 0.5,
+impl Board {
+    fn new(offset: usize, initial_stack_size: usize) -> Board {
+        Board {
             tetromino_count: 0,
             line_count: 0,
             active_tetromino: ActiveTetromino::new(Tetromino::get_random_shape()),
             next_shape: Tetromino::get_random_shape(),
-            board: Tetris::create_board(stack_size),
-            state: Playing,
+            board: Tetris::create_board(initial_stack_size),
+            gravity_accumulator: 0.0,
+            gravity_factor: 0.8,
             control_state: ControlState {
                 rotate_right: KeyState::new(),
                 rotate_left: KeyState::new(),
                 move_left: KeyState::new(),
                 move_right: KeyState::new(),
             },
-            time: UPDATE_TIME,
-            block: texture,
-            paused: false,
-            scale: scale,
+            offset: offset,
+            state: Playing,
         }
-    }
-
-    pub fn create_board(initial_stack_size: usize) -> [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT] {
-        let mut board = [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT];
-        if initial_stack_size > 0 {
-            for y in 0usize..initial_stack_size {
-                // set random cells within a row
-                for x in (0usize..BOARD_WIDTH).filter(|_| thread_rng().gen()) {
-                    board[(BOARD_HEIGHT - 1) - y][x] = Some(Color::Grey);
-                }
-            }
-        }
-        board
     }
 
     fn print_digit(&mut self, digit: usize, x_offset: usize) {
@@ -267,7 +242,6 @@ impl<'a> Tetris<'a> {
             }      
             _ => {}
         }
-
     }
 
     fn show_result(&mut self) {
@@ -316,15 +290,101 @@ impl<'a> Tetris<'a> {
         }
     }
 
+    fn drop_fully(&mut self) {
+        while self.active_tetromino.try_move_down(&self.board) {}
+    }
+
+    fn update(&mut self, dt: f64) -> State {
+        if self.control_state.rotate_left.is_active() {
+            for _ in 0..self.control_state.rotate_left.press_count {
+                self.active_tetromino.try_rotate_left(&self.board);
+            }
+            self.control_state.rotate_left.update_by_time();
+        }
+
+        if self.control_state.move_left.is_active() {
+            for _ in 0..self.control_state.move_left.press_count {
+                self.active_tetromino.try_move_left(&self.board);
+            }
+            self.control_state.move_left.update_by_time();
+        }
+
+        if self.control_state.move_right.is_active() {
+            for _ in 0..self.control_state.move_right.press_count {
+                self.active_tetromino.try_move_right(&self.board);
+            }
+            self.control_state.move_right.update_by_time();
+        }
+
+        match self.state {
+            Playing => self.gravity(dt),
+            Dropping => self.gravity(0.12 + dt),
+            Defeated => self.show_result(),
+        }
+        self.state
+    }
+}
+
+
+pub struct Tetris<'a> {
+    duel_mode: bool,
+    boards: Vec<Board>,
+    initial_stack_size: usize,
+    state: State,
+    time: f64,
+    block: &'a Texture<Resources>,
+    paused: bool,
+    scale: f64,
+}
+
+impl<'a> Tetris<'a> {
+    pub fn new(scale: f64,
+               texture: &'a Texture<Resources>,
+               initial_stack_size: usize,
+               duel_mode: bool)
+               -> Tetris {
+        let stack_size = if initial_stack_size < BOARD_HEIGHT {
+            initial_stack_size
+        } else {
+            BOARD_HEIGHT - 1
+        };
+        Tetris {
+            duel_mode: duel_mode,
+            boards: if duel_mode {
+                vec![Board::new(0, stack_size), Board::new(BOARD_WIDTH + SIDEBAR_WIDTH, stack_size)]
+            } else {
+                vec![Board::new(0, stack_size)]
+            },
+            initial_stack_size: stack_size,
+            state: Playing,
+            time: UPDATE_TIME,
+            block: texture,
+            paused: false,
+            scale: scale,
+        }
+    }
+
+    pub fn create_board(initial_stack_size: usize) -> [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT] {
+        let mut board = [[Default::default(); BOARD_WIDTH]; BOARD_HEIGHT];
+        if initial_stack_size > 0 {
+            for y in 0usize..initial_stack_size {
+                // set random cells within a row
+                for x in (0usize..BOARD_WIDTH).filter(|_| thread_rng().gen()) {
+                    board[(BOARD_HEIGHT - 1) - y][x] = Some(Color::Grey);
+                }
+            }
+        }
+        board
+    }
+
     fn play_again(&mut self) {
         self.state = Playing;
-        self.gravity_accumulator = 0.0;
-        self.tetromino_count = 0;
-        self.line_count = 0;
-        self.gravity_factor = 0.5;
-        self.board = Tetris::create_board(self.initial_stack_size);
-        self.active_tetromino = ActiveTetromino::new(Tetromino::get_random_shape());
-        self.next_shape = Tetromino::get_random_shape();
+        self.boards = if self.duel_mode {
+            vec![Board::new(0, self.initial_stack_size),
+                 Board::new(BOARD_WIDTH + SIDEBAR_WIDTH, self.initial_stack_size)]
+        } else {
+            vec![Board::new(0, self.initial_stack_size)]
+        };
     }
 
     pub fn render(&mut self, c: &Context, g: &mut G2d) {
@@ -332,43 +392,47 @@ impl<'a> Tetris<'a> {
         fn pos(n: usize) -> f64 {
             n as f64 * TILE_SIZE
         }
-        // render the board
-        for y in 0usize..BOARD_HEIGHT {
-            for x in 0usize..BOARD_WIDTH {
-                self.board[y][x]
-                    .as_ref()
-                    .map(|e| {
-                        Image::new_color(e.as_rgba()).draw(self.block,
-                                                           &Default::default(),
-                                                           c.trans(pos(x), pos(y)).transform,
-                                                           g)
-                    });
+        // render the boards
+        for board in &self.boards {
+            for y in 0usize..BOARD_HEIGHT {
+                for x in 0usize..BOARD_WIDTH {
+                    board.board[y][x]
+                        .as_ref()
+                        .map(|e| {
+                            Image::new_color(e.as_rgba()).draw(self.block,
+                                                               &Default::default(),
+                                                               c.trans(pos(x + board.offset),
+                                                                          pos(y))
+                                                                   .transform,
+                                                               g)
+                        });
+                }
             }
-        }
-        if self.state != Defeated {
-            for &(x, y) in self.active_tetromino.as_points().iter() {
-                Image::new_color(self.active_tetromino
+            if self.state != Defeated {
+                for &(x, y) in board.active_tetromino.as_points().iter() {
+                    Image::new_color(board.active_tetromino
+                            .get_color()
+                            .as_rgba())
+                        .draw(self.block,
+                              &Default::default(),
+                              c.trans(pos(x + board.offset), pos(y)).transform,
+                              g);
+                }
+            }
+            // render the side bar
+            rectangle(Color::Grey.as_rgba(),
+                      [0.0, 0.0, pos(SIDEBAR_WIDTH), pos(BOARD_HEIGHT)], // rectangle
+                      c.trans(pos(BOARD_WIDTH + board.offset), 0.0).transform,
+                      g);
+            for &(x, y) in board.next_shape.points(Rotation::R0).iter() {
+                Image::new_color(board.next_shape
                         .get_color()
                         .as_rgba())
                     .draw(self.block,
                           &Default::default(),
-                          c.trans(pos(x), pos(y)).transform,
+                          c.trans(pos(BOARD_WIDTH + board.offset) + pos(x + 1), pos(y)).transform,
                           g);
             }
-        }
-        // render the side bar
-        rectangle(Color::Grey.as_rgba(),
-                  [0.0, 0.0, WINDOW_WIDTH as f64 - pos(BOARD_WIDTH), WINDOW_HEIGHT as f64], // rectangle
-                  c.trans(pos(BOARD_WIDTH), 0.0).transform,
-                  g);
-        for &(x, y) in self.next_shape.points(Rotation::R0).iter() {
-            Image::new_color(self.next_shape
-                    .get_color()
-                    .as_rgba())
-                .draw(self.block,
-                      &Default::default(),
-                      c.trans(pos(BOARD_WIDTH) + pos(x + 1), pos(y)).transform,
-                      g);
         }
     }
 
@@ -376,96 +440,66 @@ impl<'a> Tetris<'a> {
         if self.paused {
             return;
         }
-
         self.time += args.dt;
-
         if self.time > UPDATE_TIME {
-            if self.control_state.rotate_right.is_active() {
-                for _ in 0..self.control_state.rotate_right.press_count {
-                    self.active_tetromino.try_rotate_right(&self.board);
+            for board in &mut self.boards {
+                if board.update(args.dt) == Defeated {
+                    self.state = Defeated;
                 }
-
-                self.control_state.rotate_right.update_by_time();
             }
-
-            if self.control_state.rotate_left.is_active() {
-                for _ in 0..self.control_state.rotate_left.press_count {
-                    self.active_tetromino.try_rotate_left(&self.board);
-                }
-                self.control_state.rotate_left.update_by_time();
-            }
-
-            if self.control_state.move_left.is_active() {
-                for _ in 0..self.control_state.move_left.press_count {
-                    self.active_tetromino.try_move_left(&self.board);
-                }
-                self.control_state.move_left.update_by_time();
-            }
-
-            if self.control_state.move_right.is_active() {
-                for _ in 0..self.control_state.move_right.press_count {
-                    self.active_tetromino.try_move_right(&self.board);
-                }
-                self.control_state.move_right.update_by_time();
-            }
-
             self.time -= UPDATE_TIME;
         }
-
-        match self.state {
-            Playing => self.gravity(args.dt),
-            Dropping => self.gravity(0.12 + args.dt),
-            Defeated => self.show_result(),
-        }
     }
-
-    pub fn drop_fully(&mut self) {
-        while self.active_tetromino.try_move_down(&self.board) {}
-    }
-
 
     pub fn key_press(&mut self, key: &Key) {
-        match (self.state, key) {
-            (Defeated, _) => {
+        let board_index = self.boards.len() - 1;
+        match (self.state, key, self.paused) {
+            // general keys
+            (Defeated, _, _) => {
                 if key == &Key::F1 {
                     self.play_again()
                 }
             }
-            (Playing, &Key::P) => self.paused = !self.paused,
-            (_, &Key::F1) => self.play_again(),
-            (_, &Key::E) if !self.paused => self.control_state.rotate_right.update_on_press(),
-            (_, &Key::Space) if !self.paused => {
-                self.state = Dropping;
-                self.drop_fully()
+            (Playing, &Key::P, _) => self.paused = !self.paused,
+            (_, &Key::F1, _) => self.play_again(),
+            // keys of player one
+            (_, &Key::Space, false) => self.boards[0].drop_fully(),
+            (_, &Key::Down, false) => self.boards[0].state = Dropping,
+            (_, &Key::Up, false) => self.boards[0].control_state.rotate_left.update_on_press(),
+            (_, &Key::Left, false) => self.boards[0].control_state.move_left.update_on_press(),
+            (_, &Key::Right, false) => self.boards[0].control_state.move_right.update_on_press(),
+            // keys of player two
+            (_, &Key::F, false) => self.boards[board_index].drop_fully(),
+            (_, &Key::S, false) => self.boards[board_index].state = Dropping,
+            (_, &Key::Q, false) => {
+                self.boards[board_index].control_state.rotate_left.update_on_press()
             }
-            (_, &Key::Up) | (_, &Key::Q) if !self.paused => {
-                self.control_state.rotate_left.update_on_press()
+            (_, &Key::A, false) => {
+                self.boards[board_index].control_state.move_left.update_on_press()
             }
-            (_, &Key::Left) | (_, &Key::A) if !self.paused => {
-                self.control_state.move_left.update_on_press()
+            (_, &Key::D, false) => {
+                self.boards[board_index].control_state.move_right.update_on_press()
             }
-            (_, &Key::Right) | (_, &Key::D) if !self.paused => {
-                self.control_state.move_right.update_on_press()
-            }
-            (_, &Key::Down) | (_, &Key::S) if !self.paused => self.state = Dropping,
             _ => {}
         }
     }
 
     pub fn key_release(&mut self, key: &Key) {
-        match (self.state, key) {
-            (Dropping, &Key::Down) |
-            (Dropping, &Key::S) if !self.paused => self.state = Playing,
-            (_, &Key::E) if !self.paused => self.control_state.rotate_right.update_on_release(),
-            (_, &Key::Up) | (_, &Key::Q) if !self.paused => {
-                self.control_state.rotate_left.update_on_release()
-            }
-            (_, &Key::Left) | (_, &Key::A) if !self.paused => {
-                self.control_state.move_left.update_on_release()
-            }
-            (_, &Key::Right) | (_, &Key::D) if !self.paused => {
-                self.control_state.move_right.update_on_release()
-            }
+        if self.paused {
+            return;
+        }
+        let board_index = self.boards.len() - 1;
+        match key {
+            // player one
+            &Key::Down => self.boards[0].state = Playing,
+            &Key::Up => self.boards[0].control_state.rotate_left.update_on_release(),
+            &Key::Left => self.boards[0].control_state.move_left.update_on_release(),
+            &Key::Right => self.boards[0].control_state.move_right.update_on_release(),
+            // player two
+            &Key::S => self.boards[board_index].state = Playing,
+            &Key::Q => self.boards[board_index].control_state.rotate_left.update_on_release(),
+            &Key::A => self.boards[board_index].control_state.move_left.update_on_release(),
+            &Key::D => self.boards[board_index].control_state.move_right.update_on_release(),
             _ => {}
         }
     }

@@ -4,9 +4,11 @@ extern crate gfx_device_gl;
 extern crate find_folder;
 extern crate rand;
 extern crate clap;
+extern crate time;
 
 use piston_window::*;
 use clap::{App, Arg};
+use time::PreciseTime;
 
 mod tetromino;
 mod active;
@@ -30,6 +32,11 @@ fn main() {
             .help("Deteremines the number of lines to be filled randomly")
             .multiple(false)
             .takes_value(true))
+        .arg(Arg::with_name("duel_mode")
+            .short("d")
+            .long("duel_mode")
+            .help("Turns duel mode on which means two player can against each other")
+            .multiple(false))
         .arg(Arg::with_name("music_off")
             .short("o")
             .long("music_off")
@@ -45,9 +52,14 @@ fn main() {
     if let Some(ref stack_size_str) = matches.value_of("initial_stack_size") {
         initial_stack_size = stack_size_str.parse::<usize>().unwrap();
     }
+    let duel_mode = matches.is_present("duel_mode");
     let music_off = matches.is_present("music_off");
     let mini = matches.is_present("mini");
-    let (width, height) = (tetris::WINDOW_WIDTH, tetris::WINDOW_HEIGHT);
+    let (width, height) = if duel_mode {
+        (tetris::WINDOW_WIDTH * 2, tetris::WINDOW_HEIGHT)
+    } else {
+        (tetris::WINDOW_WIDTH, tetris::WINDOW_HEIGHT)
+    };
     let (width, height) = if mini {
         (width / 2, height / 2)
     } else {
@@ -69,7 +81,8 @@ fn main() {
         .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
     let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 },
                                        &basic_block,
-                                       initial_stack_size);
+                                       initial_stack_size,
+                                       duel_mode);
 
     music::start::<Music, _>(|| {
         music::bind_file(Music::Waves,
@@ -81,7 +94,9 @@ fn main() {
         while let Some(e) = window.next() {
             window.draw_2d(&e, |c, gl| {
                 clear([1.0; 4], gl);
+                let start = PreciseTime::now();
                 game.render(&c, gl);
+                println!("render {}", start.to(PreciseTime::now()));
             });
 
             if let Some(uargs) = e.update_args() {
