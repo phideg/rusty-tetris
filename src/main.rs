@@ -4,9 +4,11 @@ extern crate gfx_device_gl;
 extern crate find_folder;
 extern crate rand;
 extern crate clap;
+extern crate time;
 
 use piston_window::*;
 use clap::{App, Arg};
+use time::PreciseTime;
 
 mod tetromino;
 mod active;
@@ -85,7 +87,9 @@ fn main() {
             });
 
             if let Some(uargs) = e.update_args() {
+                let start = PreciseTime::now();
                 game.update(&uargs);
+                println!("render {}", start.to(PreciseTime::now()));
             }
 
             if let Some(Button::Keyboard(key)) = e.press_args() {
