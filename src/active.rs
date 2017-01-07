@@ -35,14 +35,7 @@ impl ActiveTetromino {
         self.shape.get_color()
     }
 
-    pub fn try_rotate_right(&mut self, board: &[[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT]) {
-        let r = self.rotation.increase();
-        if self.is_move_allowed(self.x, self.y, r, board) {
-            self.rotation = r;
-        };
-    }
-
-    pub fn try_rotate_left(&mut self, board: &[[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT]) {
+    pub fn try_rotate(&mut self, board: &[[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT]) {
         let r = self.rotation.decrease();
         if self.is_move_allowed(self.x, self.y, r, board) {
             self.rotation = r;

@@ -88,8 +88,7 @@ impl KeyState {
 }
 
 pub struct ControlState {
-    rotate_right: KeyState,
-    rotate_left: KeyState,
+    rotate: KeyState,
     move_left: KeyState,
     move_right: KeyState,
 }
@@ -116,10 +115,9 @@ impl Board {
             next_shape: Tetromino::get_random_shape(),
             board: Tetris::create_board(initial_stack_size),
             gravity_accumulator: 0.0,
-            gravity_factor: 0.8,
+            gravity_factor: 7.0,
             control_state: ControlState {
-                rotate_right: KeyState::new(),
-                rotate_left: KeyState::new(),
+                rotate: KeyState::new(),
                 move_left: KeyState::new(),
                 move_right: KeyState::new(),
             },
@@ -283,7 +281,7 @@ impl Board {
                     self.tetromino_count += 1;
                     if self.tetromino_count >= 10 {
                         self.tetromino_count = 0;
-                        self.gravity_factor *= 1.1;
+                        self.gravity_factor *= 1.2;
                     }
                 }
             }
@@ -295,11 +293,11 @@ impl Board {
     }
 
     fn update(&mut self, dt: f64) -> State {
-        if self.control_state.rotate_left.is_active() {
-            for _ in 0..self.control_state.rotate_left.press_count {
-                self.active_tetromino.try_rotate_left(&self.board);
+        if self.control_state.rotate.is_active() {
+            for _ in 0..self.control_state.rotate.press_count {
+                self.active_tetromino.try_rotate(&self.board);
             }
-            self.control_state.rotate_left.update_by_time();
+            self.control_state.rotate.update_by_time();
         }
 
         if self.control_state.move_left.is_active() {
@@ -318,7 +316,7 @@ impl Board {
 
         match self.state {
             Playing => self.gravity(dt),
-            Dropping => self.gravity(0.12 + dt),
+            Dropping => self.gravity(0.22 + dt),
             Defeated => self.show_result(),
         }
         self.state
@@ -328,7 +326,7 @@ impl Board {
 
 pub struct Tetris<'a> {
     duel_mode: bool,
-    boards: Vec<Board>,
+    boards: [Board; 2],
     initial_stack_size: usize,
     state: State,
     time: f64,
@@ -350,11 +348,8 @@ impl<'a> Tetris<'a> {
         };
         Tetris {
             duel_mode: duel_mode,
-            boards: if duel_mode {
-                vec![Board::new(0, stack_size), Board::new(BOARD_WIDTH + SIDEBAR_WIDTH, stack_size)]
-            } else {
-                vec![Board::new(0, stack_size)]
-            },
+            boards: [Board::new(0, stack_size),
+                     Board::new(BOARD_WIDTH + SIDEBAR_WIDTH, stack_size)],
             initial_stack_size: stack_size,
             state: Playing,
             time: UPDATE_TIME,
@@ -379,62 +374,68 @@ impl<'a> Tetris<'a> {
 
     fn play_again(&mut self) {
         self.state = Playing;
-        self.boards = if self.duel_mode {
-            vec![Board::new(0, self.initial_stack_size),
-                 Board::new(BOARD_WIDTH + SIDEBAR_WIDTH, self.initial_stack_size)]
-        } else {
-            vec![Board::new(0, self.initial_stack_size)]
-        };
+        self.boards = [Board::new(0, self.initial_stack_size),
+                       Board::new(BOARD_WIDTH + SIDEBAR_WIDTH, self.initial_stack_size)];
     }
 
     pub fn render(&mut self, c: &Context, g: &mut G2d) {
+        // clear the screen
+        clear([1.0; 4], g);
+        self.render_board(c, g, 0);
+        if self.duel_mode {
+            self.render_board(c, g, 1);
+        }
+    }
+
+    fn render_board(&mut self, c: &Context, g: &mut G2d, board_index: usize) {
         let c = c.zoom(self.scale);
         fn pos(n: usize) -> f64 {
             n as f64 * TILE_SIZE
         }
-        // render the boards
-        for board in &self.boards {
-            for y in 0usize..BOARD_HEIGHT {
-                for x in 0usize..BOARD_WIDTH {
-                    board.board[y][x]
-                        .as_ref()
-                        .map(|e| {
-                            Image::new_color(e.as_rgba()).draw(self.block,
-                                                               &Default::default(),
-                                                               c.trans(pos(x + board.offset),
-                                                                          pos(y))
-                                                                   .transform,
-                                                               g)
-                        });
-                }
+        let ref board = self.boards[board_index];
+        let offset = board.offset;
+        // render the board
+        for y in 0usize..BOARD_HEIGHT {
+            for x in 0usize..BOARD_WIDTH {
+                board.board[y][x]
+                    .as_ref()
+                    .map(|e| {
+                        Image::new_color(e.as_rgba()).draw(self.block,
+                                                           &Default::default(),
+                                                           c.trans(pos(x + offset), pos(y))
+                                                               .transform,
+                                                           g)
+                    });
             }
-            if self.state != Defeated {
-                for &(x, y) in board.active_tetromino.as_points().iter() {
-                    Image::new_color(board.active_tetromino
-                            .get_color()
-                            .as_rgba())
-                        .draw(self.block,
-                              &Default::default(),
-                              c.trans(pos(x + board.offset), pos(y)).transform,
-                              g);
-                }
-            }
-            // render the side bar
-            rectangle(Color::Grey.as_rgba(),
-                      [0.0, 0.0, pos(SIDEBAR_WIDTH), pos(BOARD_HEIGHT)], // rectangle
-                      c.trans(pos(BOARD_WIDTH + board.offset), 0.0).transform,
-                      g);
-            for &(x, y) in board.next_shape.points(Rotation::R0).iter() {
-                Image::new_color(board.next_shape
+        }
+        if self.state != Defeated {
+            for &(x, y) in board.active_tetromino.as_points().iter() {
+                Image::new_color(board.active_tetromino
                         .get_color()
                         .as_rgba())
                     .draw(self.block,
                           &Default::default(),
-                          c.trans(pos(BOARD_WIDTH + board.offset) + pos(x + 1), pos(y)).transform,
+                          c.trans(pos(x + offset), pos(y)).transform,
                           g);
             }
         }
+        // render the side bar
+        rectangle(Color::Grey.as_rgba(),
+                  [0.0, 0.0, pos(SIDEBAR_WIDTH), pos(BOARD_HEIGHT)], // rectangle
+                  c.trans(pos(BOARD_WIDTH + offset), 0.0).transform,
+                  g);
+        for &(x, y) in board.next_shape.points(Rotation::R0).iter() {
+            Image::new_color(board.next_shape
+                    .get_color()
+                    .as_rgba())
+                .draw(self.block,
+                      &Default::default(),
+                      c.trans(pos(BOARD_WIDTH + offset) + pos(x + 1), pos(y))
+                          .transform,
+                      g);
+        }
     }
+
 
     pub fn update(&mut self, args: &UpdateArgs) {
         if self.paused {
@@ -445,6 +446,15 @@ impl<'a> Tetris<'a> {
             for board in &mut self.boards {
                 if board.update(args.dt) == Defeated {
                     self.state = Defeated;
+                    break;
+                }
+            }
+            if self.state == Defeated {
+                for board in &mut self.boards {
+                    if board.state != Defeated {
+                        board.show_result();
+                        board.state = Defeated;
+                    }
                 }
             }
             self.time -= UPDATE_TIME;
@@ -465,15 +475,13 @@ impl<'a> Tetris<'a> {
             // keys of player one
             (_, &Key::Space, false) => self.boards[0].drop_fully(),
             (_, &Key::Down, false) => self.boards[0].state = Dropping,
-            (_, &Key::Up, false) => self.boards[0].control_state.rotate_left.update_on_press(),
+            (_, &Key::Up, false) => self.boards[0].control_state.rotate.update_on_press(),
             (_, &Key::Left, false) => self.boards[0].control_state.move_left.update_on_press(),
             (_, &Key::Right, false) => self.boards[0].control_state.move_right.update_on_press(),
             // keys of player two
             (_, &Key::F, false) => self.boards[board_index].drop_fully(),
             (_, &Key::S, false) => self.boards[board_index].state = Dropping,
-            (_, &Key::Q, false) => {
-                self.boards[board_index].control_state.rotate_left.update_on_press()
-            }
+            (_, &Key::Q, false) => self.boards[board_index].control_state.rotate.update_on_press(),
             (_, &Key::A, false) => {
                 self.boards[board_index].control_state.move_left.update_on_press()
             }
@@ -492,12 +500,12 @@ impl<'a> Tetris<'a> {
         match key {
             // player one
             &Key::Down => self.boards[0].state = Playing,
-            &Key::Up => self.boards[0].control_state.rotate_left.update_on_release(),
+            &Key::Up => self.boards[0].control_state.rotate.update_on_release(),
             &Key::Left => self.boards[0].control_state.move_left.update_on_release(),
             &Key::Right => self.boards[0].control_state.move_right.update_on_release(),
             // player two
             &Key::S => self.boards[board_index].state = Playing,
-            &Key::Q => self.boards[board_index].control_state.rotate_left.update_on_release(),
+            &Key::Q => self.boards[board_index].control_state.rotate.update_on_release(),
             &Key::A => self.boards[board_index].control_state.move_left.update_on_release(),
             &Key::D => self.boards[board_index].control_state.move_right.update_on_release(),
             _ => {}

@@ -4,11 +4,9 @@ extern crate gfx_device_gl;
 extern crate find_folder;
 extern crate rand;
 extern crate clap;
-extern crate time;
 
 use piston_window::*;
 use clap::{App, Arg};
-use time::PreciseTime;
 
 mod tetromino;
 mod active;
@@ -92,11 +90,8 @@ fn main() {
             music::play(&Music::Waves, music::Repeat::Forever);
         }
         while let Some(e) = window.next() {
-            window.draw_2d(&e, |c, gl| {
-                clear([1.0; 4], gl);
-                let start = PreciseTime::now();
-                game.render(&c, gl);
-                println!("render {}", start.to(PreciseTime::now()));
+            window.draw_2d(&e, |c, g| {
+                game.render(&c, g);
             });
 
             if let Some(uargs) = e.update_args() {

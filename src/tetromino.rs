@@ -105,14 +105,6 @@ pub enum Rotation {
 }
 
 impl Rotation {
-    pub fn increase(&self) -> Rotation {
-        match *self {
-            R0 => R1,
-            R1 => R2,
-            R2 => R3,
-            R3 => R0,
-        }
-    }
     pub fn decrease(&self) -> Rotation {
         match *self {
             R0 => R3,
