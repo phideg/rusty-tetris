@@ -4,7 +4,7 @@ use gfx_device_gl::Resources;
 // use gfx_core::Resources;
 use piston_window::*;
 
-use tetromino::{Tetromino, Color, Rotation};
+use tetromino::{Tetromino, Color, Rotation, TetrominoBag};
 use active::ActiveTetromino;
 use tetris::State::*;
 
@@ -108,6 +108,7 @@ pub struct Tetris<'a> {
     block: &'a Texture<Resources>,
     paused: bool,
     scale: f64,
+    bag: TetrominoBag
 }
 
 impl<'a> Tetris<'a> {
@@ -117,14 +118,15 @@ impl<'a> Tetris<'a> {
         } else {
             BOARD_HEIGHT - 1
         };
+        let mut bag = TetrominoBag::new();
         Tetris {
             initial_stack_size: stack_size,
             gravity_accumulator: 0.0,
             gravity_factor: 0.5,
             tetromino_count: 0,
             line_count: 0,
-            active_tetromino: ActiveTetromino::new(Tetromino::get_random_shape()),
-            next_shape: Tetromino::get_random_shape(),
+            active_tetromino: ActiveTetromino::new(bag.next().unwrap()),
+            next_shape: bag.next().unwrap(),
             board: Tetris::create_board(stack_size),
             state: Playing,
             control_state: ControlState {
@@ -137,6 +139,7 @@ impl<'a> Tetris<'a> {
             block: texture,
             paused: false,
             scale: scale,
+            bag: bag,
         }
     }
 
@@ -305,7 +308,7 @@ impl<'a> Tetris<'a> {
                     self.board = board;
                     self.line_count += full_line_count;
                     self.active_tetromino = ActiveTetromino::new(self.next_shape);
-                    self.next_shape = Tetromino::get_random_shape();
+                    self.next_shape = self.bag.next().unwrap();
                     self.tetromino_count += 1;
                     if self.tetromino_count >= 10 {
                         self.tetromino_count = 0;
@@ -323,8 +326,9 @@ impl<'a> Tetris<'a> {
         self.line_count = 0;
         self.gravity_factor = 0.5;
         self.board = Tetris::create_board(self.initial_stack_size);
-        self.active_tetromino = ActiveTetromino::new(Tetromino::get_random_shape());
-        self.next_shape = Tetromino::get_random_shape();
+        self.bag.clear();
+        self.active_tetromino = ActiveTetromino::new(self.bag.next().unwrap());
+        self.next_shape = self.bag.next().unwrap();
     }
 
     pub fn render(&mut self, c: &Context, g: &mut G2d) {
