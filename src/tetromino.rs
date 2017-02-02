@@ -72,7 +72,7 @@ pub static SHAPES: [Tetromino; 7] = [Tetromino {
                                                   [(1, 1), (2, 1), (1, 2), (2, 2)]],
                                      },
                                      Tetromino {
-                                         color: Lime, //
+                                         color: Lime,
                                          points: [[(1, 1), (2, 1), (0, 2), (1, 2)],
                                                   [(1, 0), (1, 1), (2, 1), (2, 2)],
                                                   [(1, 1), (2, 1), (0, 2), (1, 2)],
@@ -86,7 +86,7 @@ pub static SHAPES: [Tetromino; 7] = [Tetromino {
                                                   [(1, 0), (1, 1), (2, 1), (1, 2)]],
                                      },
                                      Tetromino {
-                                         color: Red, //
+                                         color: Red,
                                          points: [[(0, 1), (1, 1), (1, 2), (2, 2)],
                                                   [(2, 0), (1, 1), (2, 1), (1, 2)],
                                                   [(0, 1), (1, 1), (1, 2), (2, 2)],
