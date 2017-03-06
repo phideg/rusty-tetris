@@ -35,9 +35,6 @@ pub struct Tetromino {
 }
 
 impl Tetromino {
-    pub fn get_random_shape() -> &'static Tetromino {
-        thread_rng().choose(&SHAPES).unwrap()
-    }
     pub fn points(&self, rotation: Rotation) -> &[(usize, usize); 4] {
         &self.points[rotation as usize]
     }
@@ -120,5 +117,45 @@ impl Rotation {
             R2 => R1,
             R3 => R2,
         }
+    }
+}
+
+pub struct TetrominoBag {
+    bag: Vec<usize>,
+}
+
+impl TetrominoBag {
+    pub fn new() -> Self {
+        TetrominoBag { bag: Vec::with_capacity(7) }
+    }
+
+    fn valid_start(&self) -> bool {
+        // O, S, Z are considered invalid starting tiles
+        if let Some(ref tetrimino) = SHAPES.get(*self.bag.last().unwrap()) {
+            match tetrimino.color {
+                Yellow | Lime | Red => return false,
+                _ => return true,
+            }
+        }
+        return false;
+    }
+
+    pub fn clear(&mut self) {
+        self.bag.clear();
+    }
+}
+
+impl Iterator for TetrominoBag {
+    type Item = &'static Tetromino;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.bag.is_empty() {
+            self.bag.extend_from_slice(&[0, 1, 2, 3, 4, 5, 6]);
+            thread_rng().shuffle(&mut self.bag);
+            while !self.valid_start() {
+                thread_rng().shuffle(&mut self.bag);
+            }
+        }
+        SHAPES.get(self.bag.pop().unwrap())
     }
 }
