@@ -1,6 +1,6 @@
 [package]
 name = "rusty-tetris"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
     "bachm",
     "bvssvni <bvssvni@gmail.com>",
@@ -13,10 +13,9 @@ path = "src/main.rs"
 
 
 [dependencies]
-piston_window = "0.60.*"
-piston-music = "0.17.*"
-gfx_device_gl = "0.12.*"
-find_folder = "0.3.*"
-rand = "0.3.*"
-clap = "2.19.*"
-time = "*"
+piston_window = "0.64"
+piston-music = "0.19"
+gfx_device_gl = "0.13"
+find_folder = "0.3"
+rand = "0.3"
+clap = "2.22"
