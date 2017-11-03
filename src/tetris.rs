@@ -108,7 +108,7 @@ pub struct Tetris<'a> {
     block: &'a Texture<Resources>,
     paused: bool,
     scale: f64,
-    bag: TetrominoBag
+    bag: TetrominoBag,
 }
 
 impl<'a> Tetris<'a> {
@@ -267,7 +267,7 @@ impl<'a> Tetris<'a> {
                 self.board[5][0 + x_offset] = Some(Color::Grey);
                 self.board[5][1 + x_offset] = Some(Color::Grey);
                 self.board[5][2 + x_offset] = Some(Color::Grey);
-            }      
+            }
             _ => {}
         }
 
@@ -298,10 +298,12 @@ impl<'a> Tetris<'a> {
                     let mut board: [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT] =
                         [[None; BOARD_WIDTH]; BOARD_HEIGHT];
                     let mut full_line_count = BOARD_HEIGHT;
-                    for (new, old) in board.iter_mut().rev().zip(self.board
-                        .iter()
-                        .rev()
-                        .filter(|row| row.iter().any(|color| color.is_none()))) {
+                    for (new, old) in board.iter_mut().rev().zip(self.board.iter().rev().filter(
+                        |row| {
+                            row.iter().any(|color| color.is_none())
+                        },
+                    ))
+                    {
                         *new = (*old).clone();
                         full_line_count -= 1;
                     }
@@ -339,40 +341,51 @@ impl<'a> Tetris<'a> {
         // render the board
         for y in 0usize..BOARD_HEIGHT {
             for x in 0usize..BOARD_WIDTH {
-                self.board[y][x]
-                    .as_ref()
-                    .map(|e| {
-                        Image::new_color(e.as_rgba()).draw(self.block,
-                                                           &Default::default(),
-                                                           c.trans(pos(x), pos(y)).transform,
-                                                           g)
-                    });
+                self.board[y][x].as_ref().map(|e| {
+                    Image::new_color(e.as_rgba()).draw(
+                        self.block,
+                        &Default::default(),
+                        c.trans(pos(x), pos(y)).transform,
+                        g,
+                    )
+                });
             }
         }
         if self.state != Defeated {
             for &(x, y) in self.active_tetromino.as_points().iter() {
-                Image::new_color(self.active_tetromino
-                        .get_color()
-                        .as_rgba())
-                    .draw(self.block,
-                          &Default::default(),
-                          c.trans(pos(x), pos(y)).transform,
-                          g);
+                Image::new_color(self.active_tetromino.get_color().as_rgba()).draw(
+                    self.block,
+                    &Default::default(),
+                    c.trans(
+                        pos(x),
+                        pos(y),
+                    ).transform,
+                    g,
+                );
             }
         }
         // render the side bar
-        rectangle(Color::Grey.as_rgba(),
-                  [0.0, 0.0, WINDOW_WIDTH as f64 - pos(BOARD_WIDTH), WINDOW_HEIGHT as f64], // rectangle
-                  c.trans(pos(BOARD_WIDTH), 0.0).transform,
-                  g);
+        rectangle(
+            Color::Grey.as_rgba(),
+            [
+                0.0,
+                0.0,
+                WINDOW_WIDTH as f64 - pos(BOARD_WIDTH),
+                WINDOW_HEIGHT as f64,
+            ], // rectangle
+            c.trans(pos(BOARD_WIDTH), 0.0).transform,
+            g,
+        );
         for &(x, y) in self.next_shape.points(Rotation::R0).iter() {
-            Image::new_color(self.next_shape
-                    .get_color()
-                    .as_rgba())
-                .draw(self.block,
-                      &Default::default(),
-                      c.trans(pos(BOARD_WIDTH) + pos(x + 1), pos(y)).transform,
-                      g);
+            Image::new_color(self.next_shape.get_color().as_rgba()).draw(
+                self.block,
+                &Default::default(),
+                c.trans(
+                    pos(BOARD_WIDTH) + pos(x + 1),
+                    pos(y),
+                ).transform,
+                g,
+            );
         }
     }
 

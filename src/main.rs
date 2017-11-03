@@ -20,26 +20,35 @@ enum Music {
     Waves,
 }
 
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
+enum Sound { }
+
 fn main() {
     let matches = App::new("rusty-tetris")
         .about("Simple Tetris clone written in Rust")
         .version("0.0.4")
-        .arg(Arg::with_name("initial_stack_size")
-            .short("i")
-            .long("initial_stack_size")
-            .help("Deteremines the number of lines to be filled randomly")
-            .multiple(false)
-            .takes_value(true))
-        .arg(Arg::with_name("music_off")
-            .short("o")
-            .long("music_off")
-            .help("Turns off the music")
-            .multiple(false))
-        .arg(Arg::with_name("mini")
-            .short("m")
-            .long("mini")
-            .help("Minified rendering for screens < 600x800")
-            .multiple(false))
+        .arg(
+            Arg::with_name("initial_stack_size")
+                .short("i")
+                .long("initial_stack_size")
+                .help("Deteremines the number of lines to be filled randomly")
+                .multiple(false)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("music_off")
+                .short("o")
+                .long("music_off")
+                .help("Turns off the music")
+                .multiple(false),
+        )
+        .arg(
+            Arg::with_name("mini")
+                .short("m")
+                .long("mini")
+                .help("Minified rendering for screens < 600x800")
+                .multiple(false),
+        )
         .get_matches();
     let mut initial_stack_size: usize = 0;
     if let Some(ref stack_size_str) = matches.value_of("initial_stack_size") {
@@ -53,30 +62,35 @@ fn main() {
     } else {
         (width, height)
     };
-    let mut window: PistonWindow = WindowSettings::new("Rusty Tetris", [width, height])
-        .exit_on_esc(true)
-        .opengl(OpenGL::V3_2)
-        .build()
-        .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
+    let mut window: PistonWindow =
+        WindowSettings::new("Rusty Tetris", [width, height])
+            .exit_on_esc(true)
+            .build()
+            .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
     let assets = find_folder::Search::ParentsThenKids(3, 3)
         .for_folder("assets")
         .unwrap();
-    let basic_block = Texture::from_path(&mut window.factory,
-                                         &(assets.join("block.png")),
-                                         Flip::None,
-                                         &TextureSettings::new())
-        .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
-    let mut game = tetris::Tetris::new(if mini { 0.5 } else { 1.0 },
-                                       &basic_block,
-                                       initial_stack_size);
+    let basic_block = Texture::from_path(
+        &mut window.factory,
+        &(assets.join("block.png")),
+        Flip::None,
+        &TextureSettings::new(),
+    ).unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
+    let mut game = tetris::Tetris::new(
+        if mini { 0.5 } else { 1.0 },
+        &basic_block,
+        initial_stack_size,
+    );
 
-    music::start::<Music, _>(|| {
-        music::bind_file(Music::Waves,
-                         &(assets.join("airtone_-_gravitationalWaves.mp3")));
+    music::start::<Music, Sound, _>(16, || {
+        music::bind_music_file(
+            Music::Waves,
+            &(assets.join("airtone-gravitationalWaves.ogg")),
+        );
         if !music_off {
             music::set_volume(0.2);
-            music::play(&Music::Waves, music::Repeat::Forever);
+            music::play_music(&Music::Waves, music::Repeat::Forever);
         }
         while let Some(e) = window.next() {
             window.draw_2d(&e, |c, gl| {

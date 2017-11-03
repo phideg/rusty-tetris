@@ -70,18 +70,20 @@ impl ActiveTetromino {
         }
     }
 
-    fn is_move_allowed(&self,
-                       x2: usize,
-                       y2: usize,
-                       rotation: Rotation,
-                       board: &[[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT])
-                       -> bool {
+    fn is_move_allowed(
+        &self,
+        x2: usize,
+        y2: usize,
+        rotation: Rotation,
+        board: &[[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT],
+    ) -> bool {
         !self.shape
             .points(rotation)
             .iter()
             .map(|&(x1, y1)| (x1.wrapping_add(x2), y1.wrapping_add(y2)))
             .any(|(x, y)| {
-                board.get(y)
+                board
+                    .get(y)
                     .and_then(|e| e.get(x))
                     .map(|e| e.is_some())
                     .unwrap_or(!HIDDEN_ROWS.contains(&y))
