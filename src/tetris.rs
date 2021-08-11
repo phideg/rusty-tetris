@@ -1,12 +1,13 @@
-use std::default::Default;
-use rand::{thread_rng, Rng};
+#![allow(clippy::identity_op)]
 use gfx_device_gl::Resources;
+use rand::{thread_rng, Rng};
+use std::default::Default;
 // use gfx_core::Resources;
 use piston_window::*;
 
-use tetromino::{Tetromino, Color, Rotation, TetrominoBag};
-use active::ActiveTetromino;
-use tetris::State::*;
+use crate::active::ActiveTetromino;
+use crate::tetris::State::*;
+use crate::tetromino::{Color, Rotation, Tetromino, TetrominoBag};
 
 pub const WINDOW_WIDTH: u32 = 600;
 pub const WINDOW_HEIGHT: u32 = 800;
@@ -15,7 +16,6 @@ pub const BOARD_HEIGHT: usize = 20;
 static TILE_SIZE: f64 = 40.0;
 
 pub const UPDATE_TIME: f64 = 0.15;
-
 
 #[derive(PartialEq, Copy, Clone)]
 enum State {
@@ -138,8 +138,8 @@ impl<'a> Tetris<'a> {
             time: UPDATE_TIME,
             block: texture,
             paused: false,
-            scale: scale,
-            bag: bag,
+            scale,
+            bag,
         }
     }
 
@@ -171,7 +171,6 @@ impl<'a> Tetris<'a> {
                 self.board[5][0 + x_offset] = Some(Color::Grey);
                 self.board[5][1 + x_offset] = Some(Color::Grey);
                 self.board[5][2 + x_offset] = Some(Color::Grey);
-
             }
             1 => {
                 self.board[1][2 + x_offset] = Some(Color::Grey);
@@ -270,7 +269,6 @@ impl<'a> Tetris<'a> {
             }
             _ => {}
         }
-
     }
 
     fn show_result(&mut self) {
@@ -298,13 +296,13 @@ impl<'a> Tetris<'a> {
                     let mut board: [[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT] =
                         [[None; BOARD_WIDTH]; BOARD_HEIGHT];
                     let mut full_line_count = BOARD_HEIGHT;
-                    for (new, old) in board.iter_mut().rev().zip(self.board.iter().rev().filter(
-                        |row| {
-                            row.iter().any(|color| color.is_none())
-                        },
-                    ))
-                    {
-                        *new = (*old).clone();
+                    for (new, old) in board.iter_mut().rev().zip(
+                        self.board
+                            .iter()
+                            .rev()
+                            .filter(|row| row.iter().any(|color| color.is_none())),
+                    ) {
+                        *new = *old;
                         full_line_count -= 1;
                     }
                     self.board = board;
@@ -341,14 +339,14 @@ impl<'a> Tetris<'a> {
         // render the board
         for y in 0usize..BOARD_HEIGHT {
             for x in 0usize..BOARD_WIDTH {
-                self.board[y][x].as_ref().map(|e| {
+                if let Some(e) = self.board[y][x].as_ref() {
                     Image::new_color(e.as_rgba()).draw(
                         self.block,
                         &Default::default(),
                         c.trans(pos(x), pos(y)).transform,
                         g,
                     )
-                });
+                };
             }
         }
         if self.state != Defeated {
@@ -356,10 +354,7 @@ impl<'a> Tetris<'a> {
                 Image::new_color(self.active_tetromino.get_color().as_rgba()).draw(
                     self.block,
                     &Default::default(),
-                    c.trans(
-                        pos(x),
-                        pos(y),
-                    ).transform,
+                    c.trans(pos(x), pos(y)).transform,
                     g,
                 );
             }
@@ -380,10 +375,7 @@ impl<'a> Tetris<'a> {
             Image::new_color(self.next_shape.get_color().as_rgba()).draw(
                 self.block,
                 &Default::default(),
-                c.trans(
-                    pos(BOARD_WIDTH) + pos(x + 1),
-                    pos(y),
-                ).transform,
+                c.trans(pos(BOARD_WIDTH) + pos(x + 1), pos(y)).transform,
                 g,
             );
         }
@@ -440,7 +432,6 @@ impl<'a> Tetris<'a> {
         while self.active_tetromino.try_move_down(&self.board) {}
     }
 
-
     pub fn key_press(&mut self, key: &Key) {
         match (self.state, key) {
             (Defeated, _) => {
@@ -471,8 +462,7 @@ impl<'a> Tetris<'a> {
 
     pub fn key_release(&mut self, key: &Key) {
         match (self.state, key) {
-            (Dropping, &Key::Down) |
-            (Dropping, &Key::S) if !self.paused => self.state = Playing,
+            (Dropping, &Key::Down) | (Dropping, &Key::S) if !self.paused => self.state = Playing,
             (_, &Key::E) if !self.paused => self.control_state.rotate_right.update_on_release(),
             (_, &Key::Up) | (_, &Key::Q) if !self.paused => {
                 self.control_state.rotate_left.update_on_release()

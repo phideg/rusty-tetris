@@ -1,16 +1,16 @@
-extern crate piston_window;
-extern crate music;
-extern crate gfx_device_gl;
-extern crate find_folder;
-extern crate rand;
 extern crate clap;
+extern crate find_folder;
+extern crate gfx_device_gl;
+extern crate music;
+extern crate piston_window;
+extern crate rand;
 
-use piston_window::*;
 use clap::{App, Arg};
+use piston_window::*;
 
-mod tetromino;
 mod active;
 mod tetris;
+mod tetromino;
 
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
 enum Music {
@@ -21,7 +21,7 @@ enum Music {
 }
 
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
-enum Sound { }
+enum Sound {}
 
 fn main() {
     let matches = App::new("rusty-tetris")
@@ -51,7 +51,7 @@ fn main() {
         )
         .get_matches();
     let mut initial_stack_size: usize = 0;
-    if let Some(ref stack_size_str) = matches.value_of("initial_stack_size") {
+    if let Some(stack_size_str) = matches.value_of("initial_stack_size") {
         initial_stack_size = stack_size_str.parse::<usize>().unwrap();
     }
     let music_off = matches.is_present("music_off");
@@ -62,11 +62,10 @@ fn main() {
     } else {
         (width, height)
     };
-    let mut window: PistonWindow =
-        WindowSettings::new("Rusty Tetris", [width, height])
-            .exit_on_esc(true)
-            .build()
-            .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
+    let mut window: PistonWindow = WindowSettings::new("Rusty Tetris", [width, height])
+        .exit_on_esc(true)
+        .build()
+        .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
     let assets = find_folder::Search::ParentsThenKids(3, 3)
         .for_folder("assets")
@@ -76,7 +75,8 @@ fn main() {
         &(assets.join("block.png")),
         Flip::None,
         &TextureSettings::new(),
-    ).unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
+    )
+    .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
     let mut game = tetris::Tetris::new(
         if mini { 0.5 } else { 1.0 },
         &basic_block,
