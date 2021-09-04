@@ -1,5 +1,5 @@
-use tetromino::{Tetromino, Color, Rotation};
-use tetromino::Rotation::*;
+use crate::tetromino::Rotation::*;
+use crate::tetromino::{Color, Rotation, Tetromino};
 use std::usize;
 
 pub const BOARD_WIDTH: usize = 10;
@@ -19,7 +19,7 @@ impl ActiveTetromino {
             x: BOARD_WIDTH / 2 - 2,
             y: HIDDEN_ROWS[0],
             rotation: R0,
-            shape: shape,
+            shape,
         }
     }
 
@@ -77,7 +77,8 @@ impl ActiveTetromino {
         rotation: Rotation,
         board: &[[Option<Color>; BOARD_WIDTH]; BOARD_HEIGHT],
     ) -> bool {
-        !self.shape
+        !self
+            .shape
             .points(rotation)
             .iter()
             .map(|&(x1, y1)| (x1.wrapping_add(x2), y1.wrapping_add(y2)))

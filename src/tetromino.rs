@@ -1,6 +1,6 @@
+use crate::tetromino::Color::*;
+use crate::tetromino::Rotation::*;
 use rand::{thread_rng, Rng};
-use tetromino::Color::*;
-use tetromino::Rotation::*;
 
 #[derive(Copy, Clone)]
 pub enum Color {
@@ -142,18 +142,20 @@ pub struct TetrominoBag {
 
 impl TetrominoBag {
     pub fn new() -> Self {
-        TetrominoBag { bag: Vec::with_capacity(7) }
+        TetrominoBag {
+            bag: Vec::with_capacity(7),
+        }
     }
 
     fn valid_start(&self) -> bool {
         // O, S, Z are considered invalid starting tiles
-        if let Some(ref tetrimino) = SHAPES.get(*self.bag.last().unwrap()) {
+        if let Some(tetrimino) = SHAPES.get(*self.bag.last().unwrap()) {
             match tetrimino.color {
                 Yellow | Lime | Red => return false,
                 _ => return true,
             }
         }
-        return false;
+        false
     }
 
     pub fn clear(&mut self) {
