@@ -36,9 +36,9 @@ Windows:
 
 if you use the msvc based version of Rust you have to take care to install the msvc development libs of SDL2 and SDL_mixer.
 
-1. download [SDL2-devel-2.x.x-VC.zip](https://www.libsdl.org/download-2.0.php)
-2. download [SDL2_mixer-devel-2.x.x-VC.zip](https://www.libsdl.org/projects/SDL_mixer/)
-3. copy the *.lib files in your Rust lib directory typically `%HOMEPATH%\.multirust\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\x86_64-pc-windows-msvc\lib`
+1. download [SDL2-devel-2.x.x-VC.zip](https://github.com/libsdl-org/SDL/releases)
+2. download [SDL2_mixer-devel-2.x.x-VC.zip](https://github.com/libsdl-org/SDL_mixer/releases)
+3. unzip and copy the *.lib files into your Rust lib directory typically `%HOMEPATH%\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\x86_64-pc-windows-msvc\lib`
 4. finally you need to copy the *.dll files next to the rusty-tetris executable or if you run rusty-tetris with cargo you can place them in the projects root directory.
 
 
