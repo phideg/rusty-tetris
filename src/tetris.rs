@@ -1,9 +1,8 @@
 #![allow(clippy::identity_op)]
 use gfx_device_gl::Resources;
+use piston_window::*;
 use rand::{thread_rng, Rng};
 use std::default::Default;
-// use gfx_core::Resources;
-use piston_window::*;
 
 use crate::active::ActiveTetromino;
 use crate::tetris::State::*;
@@ -93,7 +92,7 @@ pub struct ControlState {
     move_right: KeyState,
 }
 
-pub struct Tetris<'a> {
+pub struct Tetris {
     initial_stack_size: usize,
     gravity_accumulator: f64,
     gravity_factor: f64,
@@ -105,14 +104,14 @@ pub struct Tetris<'a> {
     state: State,
     control_state: ControlState,
     time: f64,
-    block: &'a Texture<Resources>,
+    block: Texture<Resources>,
     paused: bool,
     scale: f64,
     bag: TetrominoBag,
 }
 
-impl<'a> Tetris<'a> {
-    pub fn new(scale: f64, texture: &'a Texture<Resources>, initial_stack_size: usize) -> Tetris {
+impl Tetris {
+    pub fn new(scale: f64, texture: Texture<Resources>, initial_stack_size: usize) -> Tetris {
         let stack_size = if initial_stack_size < BOARD_HEIGHT {
             initial_stack_size
         } else {
@@ -341,7 +340,7 @@ impl<'a> Tetris<'a> {
             for x in 0usize..BOARD_WIDTH {
                 if let Some(e) = self.board[y][x].as_ref() {
                     Image::new_color(e.as_rgba()).draw(
-                        self.block,
+                        &self.block,
                         &Default::default(),
                         c.trans(pos(x), pos(y)).transform,
                         g,
@@ -352,7 +351,7 @@ impl<'a> Tetris<'a> {
         if self.state != Defeated {
             for &(x, y) in self.active_tetromino.as_points().iter() {
                 Image::new_color(self.active_tetromino.get_color().as_rgba()).draw(
-                    self.block,
+                    &self.block,
                     &Default::default(),
                     c.trans(pos(x), pos(y)).transform,
                     g,
@@ -373,7 +372,7 @@ impl<'a> Tetris<'a> {
         );
         for &(x, y) in self.next_shape.points(Rotation::R0).iter() {
             Image::new_color(self.next_shape.get_color().as_rgba()).draw(
-                self.block,
+                &self.block,
                 &Default::default(),
                 c.trans(pos(BOARD_WIDTH) + pos(x + 1), pos(y)).transform,
                 g,
