@@ -1,11 +1,11 @@
 [package]
 name = "rusty-tetris"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 authors = [
     "bachm",
     "bvssvni <bvssvni@gmail.com>",
-    "phideg <deglerp@googlemail.com>"
+    "phideg <deglerp@googlemail.com>",
 ]
 
 [[bin]]
@@ -18,5 +18,5 @@ clap = { version = "4.5", features = ["derive"] }
 gfx_device_gl = "0.16"
 find_folder = "0.3"
 piston-music = "0.26"
-piston_window = "0.131"
-rand = "0.8"
+piston_window = "0.132"
+rand = "0.9"
