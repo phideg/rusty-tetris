@@ -1,6 +1,4 @@
 use clap::Parser;
-use find_folder;
-use music;
 use piston_window::*;
 
 mod active;

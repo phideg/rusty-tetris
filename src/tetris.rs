@@ -1,7 +1,7 @@
 #![allow(clippy::identity_op)]
 use gfx_device_gl::Resources;
 use piston_window::*;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::default::Default;
 
 use crate::active::ActiveTetromino;
@@ -147,7 +147,7 @@ impl Tetris {
         if initial_stack_size > 0 {
             for y in 0usize..initial_stack_size {
                 // set random cells within a row
-                for x in (0usize..BOARD_WIDTH).filter(|_| thread_rng().gen()) {
+                for x in (0usize..BOARD_WIDTH).filter(|_| rand::rng().random()) {
                     board[(BOARD_HEIGHT - 1) - y][x] = Some(Color::Grey);
                 }
             }
