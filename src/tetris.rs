@@ -1,8 +1,8 @@
 #![allow(clippy::identity_op)]
 use piston_window::wgpu_graphics::Texture;
 use piston_window::{
-    graphics::{Context, Image, rectangle, Transformed, Graphics},
-    UpdateArgs, Key,
+    Key, UpdateArgs,
+    graphics::{Context, Graphics, Image, Transformed, rectangle},
 };
 use rand::Rng;
 use std::default::Default;
@@ -333,7 +333,11 @@ impl Tetris {
         self.next_shape = self.bag.next().unwrap();
     }
 
-    pub fn render<G: Graphics<Texture = piston_window::wgpu_graphics::Texture>>(&mut self, c: &Context, g: &mut G) {
+    pub fn render<G: Graphics<Texture = piston_window::wgpu_graphics::Texture>>(
+        &mut self,
+        c: &Context,
+        g: &mut G,
+    ) {
         let c = c.zoom(self.scale);
         fn pos(n: usize) -> f64 {
             n as f64 * TILE_SIZE

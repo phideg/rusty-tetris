@@ -1,10 +1,8 @@
 use clap::Parser;
-use piston_window::{
-    PistonWindow, WindowSettings,
-    graphics::clear,
-    Button, UpdateEvent, PressEvent, ReleaseEvent
-};
 use piston_window::wgpu_graphics::{Texture, TextureSettings};
+use piston_window::{
+    Button, PistonWindow, PressEvent, ReleaseEvent, UpdateEvent, WindowSettings, graphics::clear,
+};
 
 mod active;
 mod tetris;
