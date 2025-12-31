@@ -1,6 +1,9 @@
 #![allow(clippy::identity_op)]
-use gfx_device_gl::Resources;
-use piston_window::*;
+use piston_window::wgpu_graphics::Texture;
+use piston_window::{
+    graphics::{Context, Image, rectangle, Transformed, Graphics},
+    UpdateArgs, Key,
+};
 use rand::Rng;
 use std::default::Default;
 
@@ -104,14 +107,14 @@ pub struct Tetris {
     state: State,
     control_state: ControlState,
     time: f64,
-    block: Texture<Resources>,
+    block: Texture,
     paused: bool,
     scale: f64,
     bag: TetrominoBag,
 }
 
 impl Tetris {
-    pub fn new(scale: f64, texture: Texture<Resources>, initial_stack_size: usize) -> Tetris {
+    pub fn new(scale: f64, texture: Texture, initial_stack_size: usize) -> Tetris {
         let stack_size = if initial_stack_size < BOARD_HEIGHT {
             initial_stack_size
         } else {
@@ -330,7 +333,7 @@ impl Tetris {
         self.next_shape = self.bag.next().unwrap();
     }
 
-    pub fn render(&mut self, c: &Context, g: &mut G2d) {
+    pub fn render<G: Graphics<Texture = piston_window::wgpu_graphics::Texture>>(&mut self, c: &Context, g: &mut G) {
         let c = c.zoom(self.scale);
         fn pos(n: usize) -> f64 {
             n as f64 * TILE_SIZE

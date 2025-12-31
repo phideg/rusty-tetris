@@ -1,5 +1,10 @@
 use clap::Parser;
-use piston_window::*;
+use piston_window::{
+    PistonWindow, WindowSettings,
+    graphics::clear,
+    Button, UpdateEvent, PressEvent, ReleaseEvent
+};
+use piston_window::wgpu_graphics::{Texture, TextureSettings};
 
 mod active;
 mod tetris;
@@ -54,7 +59,6 @@ fn main() {
     let basic_block = Texture::from_path(
         &mut window.create_texture_context(),
         assets.join("block.png"),
-        Flip::None,
         &TextureSettings::new(),
     )
     .unwrap_or_else(|e| panic!("Failed to load assets: {}", e));
@@ -88,5 +92,10 @@ fn main() {
                 game.key_release(&key);
             }
         }
-    })
+    });
+
+    // Avoid potential destructor-time crashes in some EGL/driver stacks by
+    // exiting immediately (bypasses running global destructors that can hit
+    // driver bugs during cleanup). This is safer for a short-lived app.
+    std::process::exit(0);
 }
